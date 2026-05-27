@@ -21,7 +21,7 @@ const step1Schema = z.object({
   subject: z.string().min(1, 'Subject required'),
   className: z.string().min(1, 'Class name required'),
   estimatedDuration: z
-    .number({ invalid_type_error: 'Duration is required' })
+    .number({ message: 'Duration is required' })
     .min(10, 'At least 10 minutes')
     .max(300),
 })
@@ -155,7 +155,7 @@ export default function NewAssignmentPage() {
     p1 = 100
     let validQ = false
     if (s2.questionTypes && s2.questionTypes.length > 0) {
-      validQ = s2.questionTypes.every((q) => q.count >= 1 && q.marksPerQuestion >= 1)
+      validQ = s2.questionTypes.every((q) => (q?.count ?? 0) >= 1 && (q?.marksPerQuestion ?? 0) >= 1)
     }
     if (validQ) p2 += 50
     if (s2.dueDate && s2.dueDate.trim().length >= 8) p2 += 50
