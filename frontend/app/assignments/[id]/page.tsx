@@ -16,8 +16,13 @@ export default function AssignmentDetailPage() {
   const params = useParams()
   const assignmentId = params.id as string
 
-  const { stage, paper, failureMessage, setStage, setCompleted, setFailed, setQueued } =
+  const { stage, paper, failureMessage, setStage, setCompleted, setFailed, setQueued, reset } =
     useGenerationStore()
+
+  // Reset stale state from previous assignment
+  useEffect(() => {
+    reset()
+  }, [assignmentId, reset])
 
   // Connect to socket for real-time updates
   useGenerationSocket(assignmentId)
@@ -48,24 +53,42 @@ export default function AssignmentDetailPage() {
           setQueued(assignmentId, assignment.jobId)
         }
 
-        // Optionally poll job status if socket is not connected
-        if (assignment.jobId && status !== 'completed') {
-          try {
-            const jobRes = await getJobStatus(assignment.jobId)
-            if (jobRes.success && jobRes.data) {
-              const { stage: jobStage, progress } = jobRes.data
-              setStage(jobStage, progress)
+        // Poll job status periodically to prevent socket race conditions
+        if (status !== 'completed' && status !== 'failed') {
+          const interval = setInterval(async () => {
+            try {
+              const pollRes = await getAssignment(assignmentId)
+              if (pollRes.success && pollRes.data) {
+                const pollStatus = pollRes.data.status
+                if (pollStatus === 'completed' && pollRes.data.paper) {
+                  setCompleted(pollRes.data.paper)
+                  clearInterval(interval)
+                } else if (pollStatus === 'failed') {
+                  setFailed('Generation failed. Please try again.')
+                  clearInterval(interval)
+                } else if (pollRes.data.assignment.jobId) {
+                  const jobRes = await getJobStatus(pollRes.data.assignment.jobId)
+                  if (jobRes.success && jobRes.data) {
+                    setStage(jobRes.data.stage, jobRes.data.progress)
+                  }
+                }
+              }
+            } catch {
+              // ignore
             }
-          } catch {
-            // socket will handle it
-          }
+          }, 3000)
+
+          return () => clearInterval(interval)
         }
       } catch {
-        // Backend not running — let socket handle
+        // Backend not running
       }
     }
 
-    checkStatus()
+    const cleanup = checkStatus()
+    return () => {
+      cleanup.then(fn => fn && fn())
+    }
   }, [assignmentId, setCompleted, setFailed, setQueued, setStage])
 
   const isGenerating = stage !== 'completed' && stage !== 'failed'

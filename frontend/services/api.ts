@@ -4,18 +4,39 @@ import type {
   CreateAssignmentPayload,
   GeneratedPaper,
   GenerationState,
+  Question,
 } from '@/types'
 import { API_BASE_URL } from '@/constants'
+import { useAuthStore } from '@/store'
 
 // ── Base fetch ────────────────────────────────────────────────
 async function apiFetch<T>(
   path: string,
   options?: RequestInit,
 ): Promise<ApiResponse<T>> {
+  const token = useAuthStore.getState().token
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options?.headers as Record<string, string>
+  }
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
+    headers,
   })
+
+  if (res.status === 401) {
+    useAuthStore.getState().logout()
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
+    throw new Error('Unauthorized')
+  }
 
   const json = await res.json()
   if (!res.ok) {
@@ -75,6 +96,18 @@ export async function regenerateSection(
   })
 }
 
+export async function regenerateQuestion(
+  paperId: string,
+  sectionId: string,
+  questionId: string,
+  instruction?: string,
+): Promise<ApiResponse<{ question: Question; regenerated: boolean }>> {
+  return apiFetch(`/papers/${paperId}/regenerate-question`, {
+    method: 'POST',
+    body: JSON.stringify({ sectionId, questionId, instruction }),
+  })
+}
+
 export function getPdfUrl(paperId: string): string {
   return `${API_BASE_URL}/papers/${paperId}/pdf`
 }
@@ -86,11 +119,21 @@ export async function uploadMaterial(
   const formData = new FormData()
   formData.append('file', file)
 
+  const token = useAuthStore.getState().token
   const res = await fetch(`${API_BASE_URL}/upload`, {
     method: 'POST',
+    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
     body: formData,
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.message ?? 'Upload failed')
   return json
+}
+
+// ── Auth ──────────────────────────────────────────────────────
+export async function login(email: string, password: string): Promise<ApiResponse<{ token: string; user: any }>> {
+  return apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  })
 }

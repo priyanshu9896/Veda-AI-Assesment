@@ -1,6 +1,21 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import { IPaper } from '../models'
 
+// Helper to remove unsupported Unicode characters for pdf-lib StandardFonts
+function sanitizeText(text: string): string {
+  if (!text) return ''
+  return text
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/…/g, '...')
+    .replace(/Ω/g, 'Ohm')
+    .replace(/μ/g, 'micro')
+    .replace(/°/g, ' degrees')
+    // Remove any remaining non-WinAnsi characters to prevent crashes
+    .replace(/[^\x00-\xFF]/g, '')
+}
+
 export async function generatePdfBuffer(paper: IPaper): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create()
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
@@ -91,8 +106,11 @@ export async function generatePdfBuffer(paper: IPaper): Promise<Buffer> {
     currentY -= 10
 
     for (const q of section.questions) {
-      const qText = `${qNum}. [${q.difficulty.toUpperCase()}] ${q.text} [${q.marks} Mark${q.marks > 1 ? 's' : ''}]`
-      drawText(qText, 10, font)
+      // Clean out [Regenerated] markers for the final PDF
+      const cleanText = q.text.replace(/\[Regenerated\]\s*/g, '').trim()
+      const difficultyTag = `[${(q.difficulty || 'medium').toUpperCase()}]`
+      const qText = `${qNum}. ${difficultyTag} ${cleanText} [${q.marks} Mark${q.marks > 1 ? 's' : ''}]`
+      drawText(sanitizeText(qText), 10, font)
       currentY -= 10
       qNum++
     }
@@ -101,29 +119,100 @@ export async function generatePdfBuffer(paper: IPaper): Promise<Buffer> {
   currentY -= 20
   drawText('End of Question Paper', 12, boldFont, rgb(0, 0, 0), 'center')
 
+  // Add page numbers
+  const pages = pdfDoc.getPages()
+  pages.forEach((p, idx) => {
+    const pageNumText = `Page ${idx + 1} of ${pages.length}`
+    const textWidth = font.widthOfTextAtSize(pageNumText, 10)
+    p.drawText(pageNumText, {
+      x: (width - textWidth) / 2,
+      y: 20,
+      size: 10,
+      font
+    })
+  })
+
+  const pdfBytes = await pdfDoc.save()
+  return Buffer.from(pdfBytes)
+}
+
+export async function generateAnswerKeyPdfBuffer(paper: IPaper): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create()
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  
+  let page = pdfDoc.addPage([595.28, 841.89]) // A4 size
+  const { width, height } = page.getSize()
+  const margin = 50
+  let currentY = height - margin
+
+  const drawText = (text: string, size: number, currentFont: any, color = rgb(0, 0, 0), align: 'left' | 'center' = 'left') => {
+    const words = text.split(' ')
+    let line = ''
+    for (const word of words) {
+      const testLine = line + word + ' '
+      const testWidth = currentFont.widthOfTextAtSize(testLine, size)
+      if (testWidth > width - 2 * margin && line !== '') {
+        const xPos = align === 'center' ? (width - currentFont.widthOfTextAtSize(line.trim(), size)) / 2 : margin
+        page.drawText(line.trim(), { x: xPos, y: currentY, size, font: currentFont, color })
+        currentY -= size + 4
+        line = word + ' '
+        if (currentY < margin) {
+          page = pdfDoc.addPage([595.28, 841.89])
+          currentY = height - margin
+        }
+      } else {
+        line = testLine
+      }
+    }
+    const xPos = align === 'center' ? (width - currentFont.widthOfTextAtSize(line.trim(), size)) / 2 : margin
+    page.drawText(line.trim(), { x: xPos, y: currentY, size, font: currentFont, color })
+    currentY -= size + 4
+    if (currentY < margin) {
+      page = pdfDoc.addPage([595.28, 841.89])
+      currentY = height - margin
+    }
+  }
+
+  const { metadata, sections } = paper
+
+  // Title
+  drawText(`Answer key of Quiz - ${metadata.className} class`, 16, boldFont, rgb(0, 0, 0), 'center')
+  currentY -= 10
+  drawText(`Subject: ${metadata.subject}`, 12, boldFont, rgb(0, 0, 0), 'center')
+  currentY -= 30
+
   // Answer Key
   const allAnswers: { number: number; text: string }[] = []
   let counter = 1
   for (const section of sections) {
     for (const q of section.questions) {
       if (q.answerKey) {
-        allAnswers.push({ number: counter, text: q.answerKey })
+        // Clean out [Regenerated] markers for the final PDF
+        const cleanAnswer = q.answerKey.replace(/\[Regenerated\]\s*/g, '').trim()
+        allAnswers.push({ number: counter, text: sanitizeText(cleanAnswer) })
       }
       counter++
     }
   }
 
-  if (allAnswers.length > 0) {
-    page = pdfDoc.addPage([595.28, 841.89])
-    currentY = height - margin
-    drawText('Answer Key', 14, boldFont, rgb(0, 0, 0), 'center')
-    currentY -= 20
-
-    for (const ans of allAnswers) {
-      drawText(`${ans.number}. ${ans.text}`, 10, font)
-      currentY -= 10
-    }
+  for (const ans of allAnswers) {
+    drawText(`${ans.number}. ${ans.text}`, 10, font)
+    currentY -= 10
   }
+
+  // Add page numbers
+  const answerPages = pdfDoc.getPages()
+  answerPages.forEach((p, idx) => {
+    const pageNumText = `Page ${idx + 1} of ${answerPages.length}`
+    const textWidth = font.widthOfTextAtSize(pageNumText, 10)
+    p.drawText(pageNumText, {
+      x: (width - textWidth) / 2,
+      y: 20,
+      size: 10,
+      font
+    })
+  })
 
   const pdfBytes = await pdfDoc.save()
   return Buffer.from(pdfBytes)

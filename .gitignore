@@ -25,6 +25,11 @@ design/exports/
 .env
 .env.*
 !.env.example
+backend/.env
+frontend/.env.local
+
+# Upload storage
+backend/uploads/
 
 # Temporary files
 *.log
@@ -45,3 +50,7 @@ screenshot.png
 # Deployment cache
 .vercel/
 .railway/
+
+# Local databases and temporary data
+data/
+db/

@@ -25,13 +25,13 @@ export function PageHeader({
         {showBack && (
           <button
             onClick={() => router.back()}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-black/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-black/5 -ml-2"
           >
-            <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.5} />
+            <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.5} />
           </button>
         )}
-        <div className="flex items-center gap-2.5">
-          {icon ? icon : <LayoutGrid className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={2} />}
+        <div className="flex items-center gap-2">
+          {icon ? icon : <LayoutGrid className="h-[18px] w-[18px] text-[#858585] mb-[2px]" strokeWidth={2.5} />}
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h1 className="text-[15px] font-bold text-[#1c1c1e]">{title}</h1>
@@ -48,20 +48,20 @@ export function PageHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-6">
         <button className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-black/5">
-          <Bell className="h-5 w-5" strokeWidth={2} />
-          <span className="absolute right-2.5 top-2.5 h-[9px] w-[9px] rounded-full border-2 border-surface-strong bg-[#ff4141]" />
+          <Bell className="h-[22px] w-[22px]" strokeWidth={2} />
+          <span className="absolute right-[8px] top-[8px] h-[10px] w-[10px] rounded-full border-2 border-surface-strong bg-[#ff4141]" />
         </button>
         
-        <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity">
+        <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
           <img 
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=John&backgroundColor=f0d2c3" 
             alt="John Doe"
-            className="h-8 w-8 shrink-0 rounded-full bg-white object-cover shadow-sm"
+            className="h-9 w-9 shrink-0 rounded-full bg-white object-cover shadow-sm"
           />
           <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-semibold text-foreground">
+            <span className="text-[15px] font-semibold text-foreground">
               John Doe
             </span>
             <ChevronDown className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={2} />

@@ -19,7 +19,10 @@ export function MobileBottomNav() {
     <nav className="fixed bottom-5 left-1/2 z-50 flex h-[72px] w-[calc(100%-24px)] max-w-[373px] -translate-x-1/2 items-center justify-between rounded-[24px] bg-[#171717] px-2 lg:hidden">
       <div className="grid w-full grid-cols-4 gap-1">
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || (pathname === '/' && item.href === '/assignments')
+          const isActive =
+            (item.href === '/' && pathname === '/') ||
+            (item.href !== '/' && pathname.startsWith(item.href)) ||
+            (pathname === '/' && item.href === '/assignments') // Fallback if homepage defaults to assignments
           const Icon = item.icon
           
           return (

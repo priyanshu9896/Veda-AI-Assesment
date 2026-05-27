@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Assignment, GenerationStage, GeneratedPaper } from '@/types'
 
 // ── Assignment Store ─────────────────────────────────────────
@@ -90,3 +91,31 @@ export const useUIStore = create<UIState>((set) => ({
   openModal: (activeModal) => set({ activeModal }),
   closeModal: () => set({ activeModal: null }),
 }))
+
+// ── Auth Store ───────────────────────────────────────────────
+export interface User {
+  id: string
+  email: string
+  role: 'admin' | 'demo'
+}
+
+interface AuthState {
+  token: string | null
+  user: User | null
+  setAuth: (token: string, user: User) => void
+  logout: () => void
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      setAuth: (token, user) => set({ token, user }),
+      logout: () => set({ token: null, user: null }),
+    }),
+    {
+      name: 'veda-auth-storage',
+    }
+  )
+)

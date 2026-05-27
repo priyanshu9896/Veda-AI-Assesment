@@ -140,10 +140,10 @@ export function QuestionTypeBuilder({ value, onChange }: QuestionTypeBuilderProp
           Question Type
         </span>
         <div /> {/* Spacer for X */}
-        <span className="text-[13px] font-bold text-[#1c1c1e] text-center leading-tight">
-          No. of<br/>Questions
+        <span className="text-[13px] font-bold text-[#1c1c1e] text-center">
+          No. of Questions
         </span>
-        <span className="text-[13px] font-bold text-[#1c1c1e] text-center mb-[2px]">
+        <span className="text-[13px] font-bold text-[#1c1c1e] text-center">
           Marks
         </span>
       </div>

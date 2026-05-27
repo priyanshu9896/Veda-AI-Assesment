@@ -48,25 +48,25 @@ export function AssignmentCard({ assignment, index = 0 }: AssignmentCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.04, ease: 'easeOut' }}
       className={cn(
-        'card p-5 cursor-pointer hover:shadow-card-hover transition-all duration-200 group relative',
+        'bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#f0f0f0] cursor-pointer hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-200 group relative flex flex-col justify-between h-[142px]',
         deleting && 'opacity-50 pointer-events-none'
       )}
       onClick={handleView}
     >
       {/* Header row */}
-      <div className="flex items-start justify-between mb-4">
-        <h3 className="font-bold text-ink text-sm underline underline-offset-2 decoration-ink/30 hover:decoration-ink transition-colors line-clamp-2 flex-1 mr-2">
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="font-bold text-ink text-[19px] tracking-tight underline decoration-[1.5px] underline-offset-[5px] decoration-ink hover:decoration-ink/70 transition-colors line-clamp-2 flex-1 mr-4 leading-snug">
           {assignment.title}
         </h3>
 
         {/* ⋮ menu */}
-        <div className="relative flex-shrink-0">
+        <div className="relative flex-shrink-0 mt-1">
           <button
             onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v) }}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-ink-muted hover:text-ink transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 text-[#858585] hover:text-ink transition-colors -mr-1"
             aria-label="More actions"
           >
-            <MoreVertical size={16} />
+            <MoreVertical size={18} strokeWidth={2.5} />
           </button>
 
           {menuOpen && (
@@ -77,19 +77,17 @@ export function AssignmentCard({ assignment, index = 0 }: AssignmentCardProps) {
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }}
               />
               {/* Dropdown */}
-              <div className="absolute right-0 top-8 z-20 bg-white rounded-xl shadow-banner border border-surface-border py-1 min-w-[160px] animate-fade-in">
+              <div className="absolute right-0 top-8 z-20 bg-white rounded-[12px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-black/[0.04] py-1 w-[130px] animate-fade-in text-[13px] font-medium overflow-hidden">
                 <button
                   onClick={(e) => { e.stopPropagation(); handleView() }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-gray-50 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-ink hover:bg-[#f4f4f5] transition-colors"
                 >
-                  <Eye size={14} className="text-ink-muted" />
                   View Assignment
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete() }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-[#ff4141] hover:bg-[#ff4141]/5 transition-colors"
                 >
-                  <Trash2 size={14} />
                   Delete
                 </button>
               </div>
@@ -99,17 +97,17 @@ export function AssignmentCard({ assignment, index = 0 }: AssignmentCardProps) {
       </div>
 
       {/* Meta row */}
-      <div className="flex items-center justify-between text-xs text-ink-muted">
+      <div className="flex items-center justify-between text-[12.5px] mt-auto">
         <span>
-          <span className="font-semibold text-ink">Assigned on</span>
-          {' : '}
-          {formatDate(assignment.createdAt)}
+          <span className="font-bold text-ink">Assigned on</span>
+          <span className="font-bold mx-1"> : </span>
+          <span className="font-medium text-[#4c4c4c]">{formatDate(assignment.createdAt)}</span>
         </span>
         {assignment.dueDate && (
           <span>
-            <span className="font-semibold text-ink">Due</span>
-            {' : '}
-            {formatDate(assignment.dueDate)}
+            <span className="font-bold text-ink">Due</span>
+            <span className="font-bold mx-1"> : </span>
+            <span className="font-medium text-[#4c4c4c]">{formatDate(assignment.dueDate)}</span>
           </span>
         )}
       </div>

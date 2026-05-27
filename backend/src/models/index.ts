@@ -1,4 +1,8 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, Document, Types } from 'mongoose'
+import { User, IUser } from './User'
+
+export { User }
+export type { IUser }
 
 // ── Assignment ────────────────────────────────────────────────
 export interface IAssignment extends Document {
@@ -31,6 +35,7 @@ export interface IAssignment extends Document {
   paperId?: string
   createdAt: Date
   updatedAt: Date
+  userId: Types.ObjectId
 }
 
 const AssignmentSchema = new Schema<IAssignment>(
@@ -50,9 +55,9 @@ const AssignmentSchema = new Schema<IAssignment>(
     ],
     instructions: { type: String },
     uploadedMaterial: {
-      filename: String,
-      type: String,
-      fileId: String,
+      filename: { type: String },
+      type: { type: String },
+      fileId: { type: String },
     },
     status: {
       type: String,
@@ -61,6 +66,7 @@ const AssignmentSchema = new Schema<IAssignment>(
     },
     jobId: { type: String },
     paperId: { type: String },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   },
   { timestamps: true }
 )
@@ -98,6 +104,7 @@ export interface IPaper extends Document {
   }[]
   aiMessage?: string
   summary: { generatedBy: string; version: string }
+  userId: Types.ObjectId
 }
 
 const PaperSchema = new Schema<IPaper>(
@@ -141,9 +148,10 @@ const PaperSchema = new Schema<IPaper>(
     ],
     aiMessage: String,
     summary: {
-      generatedBy: { type: String, default: 'gemini' },
+      generatedBy: { type: String, default: 'ai' },
       version: { type: String, default: 'v1' },
     },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   },
   { timestamps: true }
 )

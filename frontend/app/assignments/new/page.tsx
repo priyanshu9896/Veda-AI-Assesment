@@ -17,7 +17,7 @@ import type { QuestionTypeConfig } from '@/types'
 // ── Zod Schemas ───────────────────────────────────────────────
 const step1Schema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters').max(120),
-  schoolName: z.string().min(2, 'School name required'),
+  schoolName: z.string(),
   subject: z.string().min(1, 'Subject required'),
   className: z.string().min(1, 'Class name required'),
   estimatedDuration: z
@@ -77,7 +77,27 @@ const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputEl
 )
 Input.displayName = 'Input'
 
-function StepIndicator({ p1, p2 }: { p1: number; p2: number }) {
+function StepIndicator({ c1, c2, step }: { c1: any; c2: any; step: 1 | 2 }) {
+  const s1 = useWatch({ control: c1 })
+  const s2 = useWatch({ control: c2 })
+
+  let p1 = 0
+  if (s1.title && s1.title.length >= 2) p1 += 33.3
+  if (s1.subject && s1.subject.length >= 1) p1 += 33.3
+  if (s1.className && s1.className.length >= 1) p1 += 33.3
+  if (s1.estimatedDuration && s1.estimatedDuration >= 10 && s1.estimatedDuration <= 300) p1 = 100
+
+  let p2 = 0
+  if (step === 2) {
+    p1 = 100
+    let validQ = false
+    if (s2.questionTypes && s2.questionTypes.length > 0) {
+      validQ = s2.questionTypes.every((q: any) => (q?.count ?? 0) >= 1 && (q?.marksPerQuestion ?? 0) >= 1)
+    }
+    if (validQ) p2 += 50
+    if (s2.dueDate && s2.dueDate.trim().length >= 8) p2 += 50
+  }
+
   return (
     <div className="flex items-center gap-3 md:gap-5 w-full">
       <div className="flex-1 h-1 md:h-1.5 rounded-full bg-[#e4e4e7] overflow-hidden relative">
@@ -100,6 +120,7 @@ function StepIndicator({ p1, p2 }: { p1: number; p2: number }) {
   )
 }
 
+
 // ── Main Page ─────────────────────────────────────────────────
 export default function NewAssignmentPage() {
   const router = useRouter()
@@ -118,7 +139,12 @@ export default function NewAssignmentPage() {
     handleSubmit: hs1,
     control: c1,
     formState: { errors: e1 },
-  } = useForm<Step1Values>({ resolver: zodResolver(step1Schema) })
+  } = useForm<Step1Values>({ 
+    resolver: zodResolver(step1Schema),
+    defaultValues: {
+      schoolName: 'Delhi Public School'
+    }
+  })
 
   // Step 2 form
   const {
@@ -139,32 +165,13 @@ export default function NewAssignmentPage() {
     },
   })
 
-  // Calculate progress
-  const s1 = useWatch({ control: c1 })
-  const s2 = useWatch({ control: c2 })
-
-  let p1 = 0
-  if (s1.title && s1.title.length >= 2) p1 += 20
-  if (s1.schoolName && s1.schoolName.length >= 2) p1 += 20
-  if (s1.subject && s1.subject.length >= 1) p1 += 20
-  if (s1.className && s1.className.length >= 1) p1 += 20
-  if (s1.estimatedDuration && s1.estimatedDuration >= 10 && s1.estimatedDuration <= 300) p1 += 20
-
-  let p2 = 0
-  if (step === 2) {
-    p1 = 100
-    let validQ = false
-    if (s2.questionTypes && s2.questionTypes.length > 0) {
-      validQ = s2.questionTypes.every((q) => (q?.count ?? 0) >= 1 && (q?.marksPerQuestion ?? 0) >= 1)
-    }
-    if (validQ) p2 += 50
-    if (s2.dueDate && s2.dueDate.trim().length >= 8) p2 += 50
-  }
-
   const onStep1Submit = (data: Step1Values) => {
     setStep1Data(data)
-    setStep(2)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Use setTimeout to allow the stack to clear and UI to remain responsive during unmount/mount
+    setTimeout(() => {
+      setStep(2)
+    }, 50)
   }
 
   const onStep2Submit = async (data: Step2Values) => {
@@ -239,80 +246,88 @@ export default function NewAssignmentPage() {
       <div className="max-w-[800px] mx-auto px-2 md:px-4 py-6 md:py-8 space-y-6 md:space-y-8 w-full">
         {/* Step indicator */}
         <div className="w-full max-w-[800px] mx-auto pb-4 md:pb-6 px-2 md:px-0">
-          <StepIndicator p1={p1} p2={p2} />
+          <StepIndicator c1={c1} c2={c2} step={step} />
+        </div>
+
+        {/* Page Header */}
+        <div className="flex items-start gap-3 mb-6 px-2 md:px-0">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#e8f5e9] mt-1 shrink-0">
+            <div className="h-3 w-3 rounded-full bg-[#4caf50]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-ink">Create Assignment</h1>
+            <p className="text-sm text-ink-muted">
+              Set up a new assignment for your students
+            </p>
+          </div>
         </div>
 
         {/* Form card */}
         <AnimatePresence mode="wait">
           {step === 1 ? (
-            <motion.div
+            <motion.form
               key="step1"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
-              className="rounded-[24px] md:rounded-[32px] bg-white p-5 md:p-8 space-y-5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#e4e4e7] md:border-none"
+              onSubmit={hs1(onStep1Submit)}
+              className="space-y-6"
             >
-              <div>
-                <h2 className="text-[20px] font-semibold text-[#1c1c1e]">Assignment Details</h2>
-                <p className="text-[13px] text-[#A1A1AA] mt-1 mb-5 md:mb-6">Basic information about your assignment</p>
-              </div>
+              <div className="rounded-[24px] md:rounded-[32px] bg-white p-5 md:p-8 space-y-5 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#e4e4e7] md:border-none">
+                <div>
+                  <h2 className="text-[20px] font-semibold text-[#1c1c1e]">Assignment Details</h2>
+                  <p className="text-[13px] text-[#A1A1AA] mt-1 mb-5 md:mb-6">Basic information about your assignment</p>
+                </div>
 
-              <Field label="Assignment Title" error={e1.title?.message}>
-                <Input
-                  {...r1('title')}
-                  placeholder="e.g. Quiz on Electricity"
-                  error={!!e1.title}
-                />
-              </Field>
-
-              <Field label="School Name" error={e1.schoolName?.message}>
-                <Input
-                  {...r1('schoolName')}
-                  placeholder="e.g. Delhi Public School, Bokaro"
-                  error={!!e1.schoolName}
-                />
-              </Field>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Subject" error={e1.subject?.message}>
+                <Field label="Assignment Title" error={e1.title?.message}>
                   <Input
-                    {...r1('subject')}
-                    placeholder="e.g. Science"
-                    error={!!e1.subject}
+                    {...r1('title')}
+                    placeholder="e.g. Quiz on Electricity"
+                    error={!!e1.title}
                   />
                 </Field>
-                <Field label="Class / Grade" error={e1.className?.message}>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Subject" error={e1.subject?.message}>
+                    <Input
+                      {...r1('subject')}
+                      placeholder="e.g. Science"
+                      error={!!e1.subject}
+                    />
+                  </Field>
+                  <Field label="Class / Grade" error={e1.className?.message}>
+                    <Input
+                      {...r1('className')}
+                      placeholder="e.g. Class 8"
+                      error={!!e1.className}
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Duration (minutes)" error={e1.estimatedDuration?.message}>
                   <Input
-                    {...r1('className')}
-                    placeholder="e.g. Class 8"
-                    error={!!e1.className}
+                    {...r1('estimatedDuration', { valueAsNumber: true })}
+                    type="number"
+                    placeholder="e.g. 45"
+                    min={10}
+                    max={300}
+                    error={!!e1.estimatedDuration}
                   />
                 </Field>
               </div>
-
-              <Field label="Duration (minutes)" error={e1.estimatedDuration?.message}>
-                <Input
-                  {...r1('estimatedDuration', { valueAsNumber: true })}
-                  type="number"
-                  placeholder="e.g. 45"
-                  min={10}
-                  max={300}
-                  error={!!e1.estimatedDuration}
-                />
-              </Field>
 
               <div className="flex justify-end pt-2">
                 <Button
                   size="lg"
                   className="rounded-full h-[48px] px-8 w-full md:w-auto"
                   rightIcon={<ArrowRight size={16} />}
-                  onClick={hs1(onStep1Submit)}
+                  type="submit"
                 >
                   Next
                 </Button>
               </div>
-            </motion.div>
+            </motion.form>
           ) : (
             <motion.form
               key="step2"
@@ -321,7 +336,7 @@ export default function NewAssignmentPage() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
               onSubmit={hs2(onStep2Submit)}
-              className="space-y-5"
+              className="space-y-6"
             >
               <div className="rounded-[24px] md:rounded-[32px] bg-white p-5 md:p-8 space-y-5 md:space-y-6 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#e4e4e7] md:border-none">
                 <div>
@@ -423,13 +438,13 @@ export default function NewAssignmentPage() {
                 </div>
               </div>
 
-              {/* Nav buttons */}
+              {/* Nav buttons - OUTSIDE the white card */}
               <div className="flex items-center justify-between pt-4 pb-8 px-2 md:px-0 gap-4">
                 <Button
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="rounded-full h-[48px] px-8 bg-white border border-black/5 shadow-sm text-[#1c1c1e] flex-1 md:flex-none"
+                  className="rounded-full h-[48px] px-8 bg-white border border-black/5 shadow-sm text-[#1c1c1e] flex-1 md:flex-none hover:bg-gray-50"
                   leftIcon={<ArrowLeft size={16} />}
                   onClick={() => setStep(1)}
                   disabled={submitting}

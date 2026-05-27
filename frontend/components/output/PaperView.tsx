@@ -6,7 +6,13 @@ import { cn } from '@/lib/utils'
 import { DIFFICULTY_DISPLAY } from '@/constants'
 import { regenerateSection, getPdfUrl } from '@/services/api'
 import type { GeneratedPaper, PaperSection, Question } from '@/types'
+import { useGenerationStore } from '@/store'
 import { PieChart } from 'lucide-react'
+
+// Helper to strip [Regenerated] markers from display
+function cleanText(text: string): string {
+  return text.replace(/\[Regenerated\]\s*/g, '').trim()
+}
 
 // ── AI Message Banner ──────────────────────────────────────────
 export function AIMessageBanner({
@@ -16,19 +22,47 @@ export function AIMessageBanner({
   message: string
   paperId: string
 }) {
+  const handleDownload = () => {
+    // Download paper
+    const link1 = document.createElement('a')
+    link1.href = `${getPdfUrl(paperId)}?type=paper`
+    link1.download = 'paper.pdf'
+    document.body.appendChild(link1)
+    link1.click()
+    document.body.removeChild(link1)
+
+    // Download answers
+    setTimeout(() => {
+      const link2 = document.createElement('a')
+      link2.href = `${getPdfUrl(paperId)}?type=answers`
+      link2.download = 'answers.pdf'
+      document.body.appendChild(link2)
+      link2.click()
+      document.body.removeChild(link2)
+    }, 500)
+  }
+
   return (
-    <div className="bg-ink text-white rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-      <p className="flex-1 text-sm leading-relaxed font-medium">{message}</p>
-      <a
-        href={getPdfUrl(paperId)}
-        download
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 border border-white/30 hover:bg-white/10 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors flex-shrink-0 active:scale-[0.97]"
+    <div className="bg-ink text-white rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+      <p className="text-[15px] sm:text-base leading-relaxed font-medium">{message}</p>
+      
+      {/* Desktop Download Button (White Pill) */}
+      <button
+        onClick={handleDownload}
+        className="hidden sm:inline-flex self-start items-center gap-2 bg-white text-ink hover:bg-gray-100 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors active:scale-[0.97]"
       >
-        <Download size={15} />
+        <Download size={16} />
         Download as PDF
-      </a>
+      </button>
+
+      {/* Mobile Download Button (Dark Circle) */}
+      <button
+        onClick={handleDownload}
+        className="sm:hidden self-start flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors active:scale-[0.97]"
+        title="Download as PDF"
+      >
+        <Download size={18} />
+      </button>
     </div>
   )
 }
@@ -47,16 +81,91 @@ function DifficultyTag({ level }: { level: string }) {
 function QuestionItem({
   question,
   number,
+  paperId,
+  sectionId,
+  onUpdate,
 }: {
   question: Question
   number: number
+  paperId: string
+  sectionId: string
+  onUpdate: (updatedQuestion: Question) => void
 }) {
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [instruction, setInstruction] = useState('')
+  const [isRegenerating, setIsRegenerating] = useState(false)
+
+  const handleRegenerate = async () => {
+    setIsRegenerating(true)
+    try {
+      const { regenerateQuestion } = await import('@/services/api')
+      const res = await regenerateQuestion(paperId, sectionId, question.id, instruction)
+      if (res.success && res.data) {
+        onUpdate(res.data.question)
+        setIsFormOpen(false)
+        setInstruction('')
+      }
+    } catch {
+      // silent
+    } finally {
+      setIsRegenerating(false)
+    }
+  }
+
   return (
-    <li className="text-sm text-ink leading-relaxed">
-      <span className="font-medium">{number}.</span>{' '}
-      <DifficultyTag level={question.difficulty} />{' '}
-      {question.text}{' '}
-      <span className="text-ink-muted">[{question.marks} Mark{question.marks !== 1 ? 's' : ''}]</span>
+    <li className="text-sm text-ink leading-relaxed relative group">
+      <div className="flex items-start gap-2">
+        <div className="flex-1">
+          <span className="font-medium">{number}.</span>{' '}
+          <DifficultyTag level={question.difficulty} />{' '}
+          {cleanText(question.text)}{' '}
+          <span className="text-ink-muted whitespace-nowrap">[{question.marks} Mark{question.marks !== 1 ? 's' : ''}]</span>
+        </div>
+        
+        {/* Always visible regenerate button */}
+        <button
+          onClick={() => setIsFormOpen(!isFormOpen)}
+          disabled={isRegenerating}
+          title="Regenerate this question"
+          className="flex-shrink-0 text-ink-muted hover:text-accent transition-colors mt-0.5"
+        >
+          <RefreshCw size={14} className={isRegenerating ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      {/* Inline Form */}
+      {isFormOpen && (
+        <div className="mt-2 ml-4 p-3 bg-surface-strong border border-surface-border rounded-lg flex flex-col sm:flex-row gap-2 shadow-sm animate-slide-up">
+          <input
+            type="text"
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            placeholder="Optional: specify how to change this question (e.g., make it harder)"
+            className="flex-1 bg-background border border-surface-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+            disabled={isRegenerating}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRegenerate()
+              if (e.key === 'Escape') setIsFormOpen(false)
+            }}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-md hover:bg-accent/90 transition-colors disabled:opacity-50"
+            >
+              {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+            </button>
+            <button
+              onClick={() => setIsFormOpen(false)}
+              disabled={isRegenerating}
+              className="px-3 py-1.5 bg-surface text-ink text-xs font-medium rounded-md border border-surface-border hover:bg-surface-border transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </li>
   )
 }
@@ -66,21 +175,21 @@ function SectionBlock({
   section,
   startNumber,
   paperId,
+  onUpdateSection,
 }: {
   section: PaperSection
   startNumber: number
   paperId: string
+  onUpdateSection: (updatedSection: PaperSection) => void
 }) {
   const [regenerating, setRegenerating] = useState(false)
-  const [questions, setQuestions] = useState<Question[]>(section.questions)
 
   const handleRegenerate = async () => {
     setRegenerating(true)
     try {
       const res = await regenerateSection(paperId, section.id)
       if (res.success && res.data) {
-        const s = res.data.section as PaperSection
-        setQuestions(s.questions)
+        onUpdateSection(res.data.section as PaperSection)
       }
     } catch {
       // silent
@@ -92,30 +201,39 @@ function SectionBlock({
   return (
     <div className="space-y-4">
       {/* Section title */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-ink text-center w-full">{section.title}</h3>
+      <div className="relative flex items-center justify-center pb-2 min-h-[32px] mt-6 mb-2">
+        <h3 className="text-xl font-bold text-ink text-center">{section.title}</h3>
         <button
           onClick={handleRegenerate}
           disabled={regenerating}
-          title="Regenerate this section"
-          className="ml-2 flex-shrink-0 text-ink-muted hover:text-ink disabled:opacity-50 transition-colors"
+          title="Regenerate entire section"
+          className="absolute right-0 flex flex-shrink-0 items-center gap-1.5 bg-surface-border hover:bg-ink text-ink hover:text-white px-2.5 py-1 rounded-md text-xs font-semibold disabled:opacity-50 transition-colors"
         >
-          <RefreshCw size={15} className={regenerating ? 'animate-spin' : ''} />
+          <RefreshCw size={13} className={regenerating ? 'animate-spin' : ''} />
+          <span className="hidden sm:inline whitespace-nowrap">Regenerate Section</span>
         </button>
       </div>
 
       {/* Instruction */}
       {section.instruction && (
-        <p className="text-sm text-ink-muted italic">{section.instruction}</p>
+        <p className="text-[15px] font-semibold text-ink mb-1">{section.instruction}</p>
       )}
 
       {/* Questions */}
-      <ol className="space-y-2.5 list-none">
-        {questions.map((q, idx) => (
+      <ol className="space-y-3.5 list-none">
+        {section.questions.map((q, idx) => (
           <QuestionItem
             key={q.id}
             question={q}
             number={startNumber + idx}
+            paperId={paperId}
+            sectionId={section.id}
+            onUpdate={(updatedQuestion) => {
+              const newQuestions = section.questions.map((prevQ) =>
+                prevQ.id === q.id ? updatedQuestion : prevQ
+              )
+              onUpdateSection({ ...section, questions: newQuestions })
+            }}
           />
         ))}
       </ol>
@@ -144,7 +262,7 @@ function AnswerKey({ sections }: { sections: PaperSection[] }) {
       <ol className="space-y-3 list-none">
         {allAnswers.map(({ number, text }) => (
           <li key={number} className="text-sm text-ink leading-relaxed">
-            <span className="font-medium">{number}.</span> {text}
+            <span className="font-medium">{number}.</span> {cleanText(text)}
           </li>
         ))}
       </ol>
@@ -160,6 +278,7 @@ export function PaperView({
   paper: GeneratedPaper
   paperId: string
 }) {
+  const setCompleted = useGenerationStore((s) => s.setCompleted)
   const { metadata, studentInfo, sections } = paper
 
   // Count start index per section
@@ -212,14 +331,14 @@ export function PaperView({
       {/* Paper body */}
       <div className="bg-white rounded-2xl shadow-card px-8 py-10 space-y-6 max-w-full">
         {/* Header */}
-        <div className="text-center space-y-1">
-          <h1 className="text-lg font-extrabold text-ink">{metadata.schoolName}</h1>
-          <p className="font-bold text-ink">Subject: {metadata.subject}</p>
-          <p className="font-bold text-ink">Class: {metadata.className}</p>
+        <div className="text-center space-y-2 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#1c1c1e]">{metadata.schoolName}</h1>
+          <p className="text-xl sm:text-2xl font-semibold text-[#1c1c1e]">Subject: {metadata.subject}</p>
+          <p className="text-xl sm:text-2xl font-semibold text-[#1c1c1e]">Class: {metadata.className}</p>
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center justify-between text-sm text-ink border-t border-b border-surface-border py-3">
+        <div className="flex items-center justify-between text-[15px] sm:text-base font-medium text-[#1c1c1e] mb-6">
           <span>Time Allowed: {metadata.estimatedDuration} minutes</span>
           <span>Maximum Marks: {metadata.totalMarks}</span>
         </div>
@@ -252,6 +371,12 @@ export function PaperView({
               section={section}
               startNumber={sectionStartNumbers[idx]}
               paperId={paperId}
+              onUpdateSection={(updatedSection) => {
+                const newSections = sections.map((s) =>
+                  s.id === section.id ? updatedSection : s
+                )
+                setCompleted({ ...paper, sections: newSections })
+              }}
             />
           ))}
         </div>

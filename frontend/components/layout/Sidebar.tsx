@@ -14,6 +14,8 @@ import {
 import { cn } from "@/lib/utils"
 import { BrandMark } from "./BrandMark"
 import { Button } from "../ui/Button"
+import { useAssignmentStore, useAuthStore } from "@/store"
+import { LogOut } from "lucide-react"
 
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: LayoutGrid },
@@ -26,6 +28,13 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { assignments } = useAssignmentStore()
+  const { logout, user } = useAuthStore()
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
 
   return (
     <aside className="hidden w-[280px] shrink-0 flex-col rounded-[24px] bg-surface-strong px-6 py-8 shadow-soft lg:flex">
@@ -34,14 +43,13 @@ export function Sidebar() {
       </div>
 
       <div className="mb-8 px-2">
-        <Button 
-          variant="accent" 
+        <button 
           onClick={() => router.push('/assignments/new')}
-          className="h-[48px] w-full rounded-full text-[15px] font-semibold"
+          className="flex items-center justify-center h-[52px] w-full rounded-full bg-[#1c1c1e] border-[1.5px] border-[#ff6136] text-[15px] font-semibold text-white shadow-[0_4px_16px_rgba(255,97,54,0.15)] hover:bg-black transition-all"
         >
-          <Sparkles className="mr-2 h-4 w-4" strokeWidth={2.5} />
+          <Sparkles className="mr-2 h-[18px] w-[18px]" strokeWidth={2.5} />
           Create Assignment
-        </Button>
+        </button>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1">
@@ -53,14 +61,21 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-[42px] items-center gap-3 rounded-xl px-4 text-[15px] transition-colors",
+                "flex h-[48px] items-center gap-3 rounded-[16px] px-4 text-[15px] transition-colors relative",
                 isActive
                   ? "bg-[#f4f4f5] text-foreground font-semibold"
                   : "text-muted font-medium hover:bg-black/5 hover:text-foreground"
               )}
             >
-              <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.5} />
-              {item.label}
+              <div className="flex flex-1 items-center gap-3">
+                <Icon className="h-[20px] w-[20px] shrink-0" strokeWidth={2.5} />
+                {item.label}
+              </div>
+              {item.label === 'Assignments' && assignments.length > 0 && (
+                <span className="ml-auto flex h-[22px] min-w-[28px] items-center justify-center rounded-full bg-[#ff6136] px-2 text-[12px] font-bold text-white shadow-sm">
+                  {assignments.length}
+                </span>
+              )}
             </Link>
           )
         })}
@@ -69,25 +84,28 @@ export function Sidebar() {
       <div className="mt-auto flex flex-col gap-4 px-2">
         <Link
           href="/settings"
-          className="flex h-[42px] items-center gap-3 rounded-xl px-4 text-[15px] font-medium text-muted transition-colors hover:bg-black/5 hover:text-foreground"
+          className="flex h-[48px] items-center gap-3 rounded-[16px] px-4 text-[15px] font-medium text-muted transition-colors hover:bg-black/5 hover:text-foreground"
         >
-          <Settings className="h-[18px] w-[18px] shrink-0" strokeWidth={2.5} />
+          <Settings className="h-[20px] w-[20px] shrink-0" strokeWidth={2.5} />
           Settings
         </Link>
 
-        <button className="flex w-full items-center gap-3 rounded-2xl bg-[#f4f4f5] p-3 transition-colors hover:bg-black/5">
-          <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=f0d2c3"
-            alt="Delhi Public School"
-            className="h-10 w-10 shrink-0 rounded-full bg-white object-cover shadow-sm"
-          />
-          <div className="flex flex-col items-start overflow-hidden text-left">
-            <span className="w-full truncate text-[14px] font-bold leading-tight text-[#1c1c1e]">
-              Delhi Public School
+        <button onClick={handleLogout} className="group relative flex w-full items-center gap-3 rounded-[20px] bg-[#f4f4f5] p-3.5 transition-colors hover:bg-[#ebebeb]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-black/5 overflow-hidden">
+            <span className="text-[16px] font-bold text-ink uppercase">
+              {user?.role?.charAt(0) || 'U'}
             </span>
-            <span className="w-full truncate text-[13px] font-medium text-[#858585]">
-              Bokaro Steel City
+          </div>
+          <div className="flex flex-col items-start overflow-hidden text-left flex-1">
+            <span className="w-full truncate text-[14px] font-bold leading-tight text-ink capitalize">
+              {user?.role || 'User'} Access
             </span>
+            <span className="w-full truncate text-[12.5px] font-medium text-[#858585] mt-0.5">
+              {user?.email || 'Logged in'}
+            </span>
+          </div>
+          <div className="absolute right-4 text-[#858585] opacity-0 transition-opacity group-hover:opacity-100">
+            <LogOut size={16} strokeWidth={2.5} />
           </div>
         </button>
       </div>

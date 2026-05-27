@@ -2,12 +2,13 @@ import { Worker } from 'bullmq'
 import IORedis from 'ioredis'
 import { v4 as uuidv4 } from 'uuid'
 import { Assignment, Paper } from '../models'
-import { getGenAI } from '../config/gemini'
+import { getGroqClient, getOpenRouterClient } from '../config/ai'
 import { buildGenerationPrompt } from '../prompts/generation'
 import { PaperOutputSchema } from '../validators'
 import { emitToAssignment } from '../sockets'
+import { getExtractedText } from '../controllers/upload'
 
-const MOCK_PAPER_ENABLED = !process.env.GEMINI_API_KEY
+const MOCK_PAPER_ENABLED = !process.env.GROQ_API_KEY && !process.env.OPENROUTER_API_KEY
 
 // ── Mock paper for dev mode ───────────────────────────────────
 function buildMockPaper(data: {
@@ -46,7 +47,7 @@ function buildMockPaper(data: {
       },
     ],
     aiMessage: `Certainly! Here is a customized Question Paper for your ${data.subject} ${data.className} class based on your specifications:`,
-    summary: { generatedBy: 'gemini', version: 'v1' },
+    summary: { generatedBy: 'mock', version: 'v1' },
   }
 }
 
@@ -96,7 +97,12 @@ export function startGenerationWorker(redisUrl: string): void {
             totalMarks: totalM,
           })
         } else {
-          // Real Gemini call
+          // Read uploaded material content if available
+          let uploadedContent = ''
+          if (assignment.uploadedMaterial?.fileId) {
+            uploadedContent = getExtractedText(assignment.uploadedMaterial.fileId)
+          }
+
           const prompt = buildGenerationPrompt({
             title: assignment.title,
             schoolName: assignment.schoolName,
@@ -105,17 +111,45 @@ export function startGenerationWorker(redisUrl: string): void {
             estimatedDuration: assignment.estimatedDuration,
             questionTypes: assignment.questionTypes,
             instructions: assignment.instructions,
+            uploadedContent: uploadedContent || undefined,
           })
 
-          const genAI = getGenAI()
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' })
-          const result = await model.generateContent(prompt)
-          const text = result.response.text()
+          let text = ''
+          let provider = 'groq'
+
+          try {
+            const groqClient = getGroqClient()
+            const result = await groqClient.chat.completions.create({
+              model: 'llama3-70b-8192',
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.7,
+              response_format: { type: 'json_object' }
+            })
+            text = result.choices[0]?.message?.content || ''
+          } catch (err) {
+            console.warn('[Worker] Groq failed, falling back to OpenRouter')
+            provider = 'openrouter'
+            const openRouterClient = getOpenRouterClient()
+            const result = await openRouterClient.chat.completions.create({
+              model: 'meta-llama/llama-3-70b-instruct',
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.7,
+            })
+            text = result?.choices?.[0]?.message?.content || ''
+          }
+
+          if (!text) {
+            throw new Error('AI Provider returned empty response or rate limit exceeded.')
+          }
 
           // Extract JSON
           const jsonMatch = text.match(/\{[\s\S]*\}/)
           if (!jsonMatch) throw new Error('AI returned no JSON')
           paperData = JSON.parse(jsonMatch[0])
+          
+          if (paperData && typeof paperData === 'object' && 'summary' in paperData) {
+            (paperData as any).summary.generatedBy = provider
+          }
         }
 
         // 3. Structuring
@@ -128,11 +162,26 @@ export function startGenerationWorker(redisUrl: string): void {
         emitToAssignment(assignmentId, 'generation:validating', { progress: 80 })
 
         const validated = PaperOutputSchema.parse(paperData)
+
+        // Validate question counts against assignment config
+        for (let i = 0; i < validated.sections.length; i++) {
+          const expectedCount = assignment.questionTypes[i]?.count
+          if (expectedCount) {
+            const actualCount = validated.sections[i].questions.length
+            if (actualCount > expectedCount) {
+              validated.sections[i].questions = validated.sections[i].questions.slice(0, expectedCount)
+            } else if (actualCount < expectedCount) {
+              throw new Error(`AI generated fewer questions (${actualCount}) than requested (${expectedCount}) for section ${i + 1}`)
+            }
+          }
+        }
+
         await new Promise((r) => setTimeout(r, 300))
 
         // 5. Store paper
         const paper = new Paper({
           assignmentId: assignmentId.toString(),
+          userId: assignment.userId,
           generatedAt: new Date(),
           generationTimeMs: Date.now() - startTime,
           metadata: validated.metadata,

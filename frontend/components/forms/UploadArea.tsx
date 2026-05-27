@@ -14,14 +14,18 @@ interface UploadAreaProps {
 
 export function UploadArea({ onFileSelect, onClear, file, error }: UploadAreaProps) {
   const [dragging, setDragging] = useState(false)
+  const [internalError, setInternalError] = useState<string | null>(null)
 
   const handleFile = useCallback(
     (f: File) => {
+      setInternalError(null)
       const accepted = Object.keys(ACCEPTED_FILE_TYPES)
-      if (!accepted.includes(f.type) && !f.name.match(/\.(pdf|txt|png|jpe?g)$/i)) {
+      if (!accepted.includes(f.type) && !f.name.match(/\.(pdf|txt|png|jpe?g|doc|docx)$/i)) {
+        setInternalError('Unsupported file type. Please upload PDF, TXT, DOC, DOCX, or Images.')
         return // ignore
       }
       if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        setInternalError(`File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`)
         return // ignore size
       }
       onFileSelect(f)
@@ -99,13 +103,13 @@ export function UploadArea({ onFileSelect, onClear, file, error }: UploadAreaPro
             Choose a file or <span className="font-bold">drag & drop it here</span>
           </p>
           <p className="text-[12px] text-[#a1a1aa]">
-            JPEG, PNG, PDF, TXT · upto {MAX_FILE_SIZE_MB}MB
+            PDF, TXT, DOC, DOCX, or Images up to {MAX_FILE_SIZE_MB}MB
           </p>
         </div>
         <label className="mt-2 cursor-pointer">
           <input
             type="file"
-            accept=".pdf,.txt,.png,.jpg,.jpeg"
+            accept=".pdf,.txt,.doc,.docx,image/*"
             className="sr-only"
             onChange={onInputChange}
           />

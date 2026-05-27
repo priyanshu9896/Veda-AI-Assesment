@@ -2,6 +2,7 @@ import { Sidebar } from "./Sidebar"
 import { PageHeader } from "./PageHeader"
 import { MobileHeader } from "./MobileHeader"
 import { MobileBottomNav } from "./MobileBottomNav"
+import { ProtectedRoute } from "../auth/ProtectedRoute"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -14,7 +15,8 @@ interface AppShellProps {
 
 export function AppShell({ children, breadcrumb, subtitle, headerIcon, showBack, assignmentCount }: AppShellProps) {
   return (
-    <div className="h-screen w-full overflow-hidden px-2.5 py-3 sm:px-4 lg:p-4 bg-background text-foreground">
+    <ProtectedRoute>
+      <div className="h-screen w-full overflow-hidden px-2.5 py-3 sm:px-4 lg:p-4 bg-background text-foreground">
       <div className="mx-auto flex h-full max-w-[1536px] gap-4 flex-col lg:flex-row">
         
         {/* Desktop Sidebar */}
@@ -27,7 +29,7 @@ export function AppShell({ children, breadcrumb, subtitle, headerIcon, showBack,
           <PageHeader title={breadcrumb} subtitle={subtitle} icon={headerIcon} showBack={showBack} assignmentCount={assignmentCount} />
 
           {/* Page Content */}
-          <div className="flex-1 overflow-y-auto rounded-[24px] scrollbar-hide pb-[110px] lg:pb-0 bg-[#f4f4f5] border border-black/[0.03]">
+          <div className="flex-1 overflow-y-auto scrollbar-hide pb-[110px] lg:pb-0">
             {children}
           </div>
         </div>
@@ -36,5 +38,6 @@ export function AppShell({ children, breadcrumb, subtitle, headerIcon, showBack,
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
     </div>
+    </ProtectedRoute>
   )
 }
