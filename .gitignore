@@ -1,0 +1,47 @@
+# Generated folders
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Documentation and Planning (Keep clean for submission)
+docs/*
+!docs/README.md
+
+PRD.md
+ARCHITECTURE.md
+TASKS.md
+DECISIONS.md
+RULES.md
+PROMPTS.md
+API_SPEC.md
+FOLDER_STRUCTURE.md
+
+# Design references and exports
+design/references/
+design/exports/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+*.local
+
+# Editor/system files
+.vscode/
+.idea/
+.DS_Store
+
+# OS/runtime files
+*.pid
+*.seed
+
+# Deployment cache
+.vercel/
+.railway/
