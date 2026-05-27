@@ -7,7 +7,6 @@ coverage/
 
 # Documentation and Planning (Keep clean for submission)
 docs/*
-!docs/README.md
 
 PRD.md
 ARCHITECTURE.md
@@ -32,6 +31,7 @@ design/exports/
 *.tmp
 *.bak
 *.local
+screenshot.png
 
 # Editor/system files
 .vscode/
