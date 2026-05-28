@@ -12,6 +12,7 @@ import apiRouter from './routes'
 import { seedUsers } from './config/seed'
 
 const app = express()
+app.set('trust proxy', 1)
 const PORT = parseInt(process.env.PORT ?? '4000')
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? 'http://localhost:3001'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
