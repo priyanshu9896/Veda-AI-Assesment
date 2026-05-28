@@ -42,26 +42,33 @@ export function AIMessageBanner({
   message: string
   paperId: string
 }) {
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const token = useAuthStore.getState().token || ''
     
-    // Download paper
-    const link1 = document.createElement('a')
-    link1.href = `${getPdfUrl(paperId)}?type=paper&token=${token}`
-    link1.download = 'paper.pdf'
-    document.body.appendChild(link1)
-    link1.click()
-    document.body.removeChild(link1)
+    const downloadPdf = async (type: string, filename: string) => {
+      try {
+        const url = `${getPdfUrl(paperId)}?type=${type}&token=${token}`
+        const res = await fetch(url)
+        if (!res.ok) throw new Error('Download failed')
+        const blob = await res.blob()
+        const blobUrl = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(blobUrl)
+        document.body.removeChild(a)
+      } catch (err) {
+        console.error(`Failed to download ${type}:`, err)
+      }
+    }
 
-    // Download answers
-    setTimeout(() => {
-      const link2 = document.createElement('a')
-      link2.href = `${getPdfUrl(paperId)}?type=answers&token=${token}`
-      link2.download = 'answers.pdf'
-      document.body.appendChild(link2)
-      link2.click()
-      document.body.removeChild(link2)
-    }, 500)
+    // Download both concurrently
+    await Promise.all([
+      downloadPdf('paper', 'paper.pdf'),
+      downloadPdf('answers', 'answers.pdf')
+    ])
   }
 
   return (

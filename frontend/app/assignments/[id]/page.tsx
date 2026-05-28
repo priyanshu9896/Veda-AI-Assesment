@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
@@ -15,6 +15,8 @@ import { getAssignment, getJobStatus } from '@/services/api'
 export default function AssignmentDetailPage() {
   const params = useParams()
   const assignmentId = params.id as string
+
+  const [isFetching, setIsFetching] = useState(true)
 
   const { stage, paper, failureMessage, setStage, setCompleted, setFailed, setQueued, reset } =
     useGenerationStore()
@@ -34,17 +36,22 @@ export default function AssignmentDetailPage() {
 
       try {
         const res = await getAssignment(assignmentId)
-        if (!res.success || !res.data) return
+        if (!res.success || !res.data) {
+          setIsFetching(false)
+          return
+        }
 
         const { assignment, paper: fetchedPaper, status } = res.data
 
         if (fetchedPaper && status === 'completed') {
           setCompleted(fetchedPaper)
+          setIsFetching(false)
           return
         }
 
         if (status === 'failed') {
           setFailed('Generation failed. Please try again.')
+          setIsFetching(false)
           return
         }
 
@@ -52,6 +59,8 @@ export default function AssignmentDetailPage() {
         if (assignment.jobId) {
           setQueued(assignmentId, assignment.jobId)
         }
+
+        setIsFetching(false)
 
         // Poll job status periodically to prevent socket race conditions
         if (status !== 'completed' && status !== 'failed') {
@@ -86,6 +95,7 @@ export default function AssignmentDetailPage() {
         }
       } catch {
         // Backend not running
+        setIsFetching(false)
       }
     }
 
@@ -111,7 +121,9 @@ export default function AssignmentDetailPage() {
       </div>
 
       <div className="px-4 lg:px-7 py-4 lg:py-6 max-w-3xl mx-auto">
-        {isGenerating ? (
+        {isFetching ? (
+          <PaperSkeleton />
+        ) : isGenerating ? (
           <GenerationTimeline stage={stage} />
         ) : stage === 'failed' ? (
           <motion.div
