@@ -21,7 +21,7 @@ export default function AssignmentsPage() {
       try {
         setLoading(true)
         const res = await getAssignments()
-        setAssignments(res.data)
+        setAssignments(res.data || [])
       } catch (err: any) {
         setError(err.message)
       } finally {

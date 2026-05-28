@@ -54,3 +54,4 @@ screenshot.png
 # Local databases and temporary data
 data/
 db/
+dump.rdb

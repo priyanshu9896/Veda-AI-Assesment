@@ -81,14 +81,28 @@ body {
 
 @layer components {
   .focus-ring {
-    @apply outline-none ring-offset-2 transition-all;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
   }
   .focus-ring:focus-visible {
     box-shadow: 0 0 0 4px rgba(255, 97, 54, 0.22);
   }
 
   .skeleton {
-    @apply bg-gray-200 animate-pulse rounded;
+    background-color: #e5e7eb;
+    border-radius: 0.25rem;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
   }
 }
 
