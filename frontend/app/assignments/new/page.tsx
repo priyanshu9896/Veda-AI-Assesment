@@ -25,7 +25,7 @@ const step1Schema = z.object({
     '1st', '2nd', '3rd', '4th', '5th',
     '6th', '7th', '8th', '9th', '10th',
     '11th', '12th'
-  ], { required_error: 'Class selection required' }),
+  ], { message: 'Class selection required' }),
   estimatedDuration: z
     .number({ message: 'Duration is required' })
     .min(10, 'At least 10 minutes')

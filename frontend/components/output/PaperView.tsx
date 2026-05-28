@@ -300,7 +300,7 @@ export function PaperView({
   paper: GeneratedPaper
   paperId: string
 }) {
-  const { paper, setCompleted, clearPaper } = useGenerationStore()
+  const { paper, setCompleted } = useGenerationStore()
 
   useEffect(() => {
     if (initialPaper) setCompleted(initialPaper)
