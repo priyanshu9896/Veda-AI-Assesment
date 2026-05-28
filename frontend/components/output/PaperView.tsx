@@ -38,14 +38,19 @@ function FormattedQuestionText({ text }: { text: string }) {
 export function AIMessageBanner({
   message,
   paperId,
+  metadata,
 }: {
   message: string
   paperId: string
+  metadata?: { subject: string; className: string }
 }) {
   const handleDownload = async () => {
     const token = useAuthStore.getState().token || ''
     
-    const downloadPdf = async (type: string, filename: string) => {
+    const subject = (metadata?.subject || 'Paper').replace(/[^a-zA-Z0-9]/g, '_')
+    const className = (metadata?.className || 'Class').replace(/[^a-zA-Z0-9]/g, '_')
+
+    const downloadPdf = async (type: string, suffix: string) => {
       try {
         const url = `${getPdfUrl(paperId)}?type=${type}&token=${token}`
         const res = await fetch(url)
@@ -53,22 +58,22 @@ export function AIMessageBanner({
         const blob = await res.blob()
         const blobUrl = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
+        a.style.display = 'none'
         a.href = blobUrl
-        a.download = filename
+        a.download = `${subject}_${className}_${suffix}.pdf`
         document.body.appendChild(a)
         a.click()
-        window.URL.revokeObjectURL(blobUrl)
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000)
         document.body.removeChild(a)
       } catch (err) {
         console.error(`Failed to download ${type}:`, err)
       }
     }
 
-    // Download both concurrently
-    await Promise.all([
-      downloadPdf('paper', 'paper.pdf'),
-      downloadPdf('answers', 'answers.pdf')
-    ])
+    // Download sequentially with a delay so browsers do not block the second file
+    await downloadPdf('paper', 'Questions')
+    await new Promise(resolve => setTimeout(resolve, 800))
+    await downloadPdf('answers', 'Answers')
   }
 
   return (
@@ -334,7 +339,7 @@ export function PaperView({
     >
       {/* AI Banner */}
       {paper.aiMessage && (
-        <AIMessageBanner message={paper.aiMessage} paperId={paperId} />
+        <AIMessageBanner message={paper.aiMessage} paperId={paperId} metadata={metadata} />
       )}
 
       {/* Paper body */}
