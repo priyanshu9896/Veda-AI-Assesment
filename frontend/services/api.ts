@@ -26,6 +26,7 @@ async function apiFetch<T>(
   }
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
+    cache: 'no-store',
     ...options,
     headers,
   })
@@ -110,6 +111,37 @@ export async function regenerateQuestion(
 
 export function getPdfUrl(paperId: string): string {
   return `${API_BASE_URL}/papers/${paperId}/pdf`
+}
+
+export async function downloadPdf(paperId: string, type: 'paper' | 'answers'): Promise<void> {
+  const token = useAuthStore.getState().token
+  
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const res = await fetch(`${API_BASE_URL}/papers/${paperId}/pdf?type=${type}`, {
+    method: 'GET',
+    headers,
+  })
+
+  if (!res.ok) {
+    const errorText = await res.text()
+    throw new Error(`Failed to download PDF: ${errorText}`)
+  }
+
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${type}.pdf`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 // ── File Upload ───────────────────────────────────────────────

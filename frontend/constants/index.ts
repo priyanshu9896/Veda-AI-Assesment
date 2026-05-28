@@ -4,6 +4,13 @@ export const SCHOOL_NAME = 'Delhi Public School'
 export const SCHOOL_LOCATION = 'Bokaro Steel City'
 export const USER_NAME = 'John Doe'
 
+export const ALLOWED_CLASSES = [
+  'Nursery', 'LKG', 'UKG',
+  '1st', '2nd', '3rd', '4th', '5th',
+  '6th', '7th', '8th', '9th', '10th',
+  '11th', '12th'
+] as const
+
 // ── API ───────────────────────────────────────────────────────
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1'

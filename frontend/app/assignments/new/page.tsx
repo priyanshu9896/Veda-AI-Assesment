@@ -12,6 +12,7 @@ import { UploadArea } from '@/components/forms/UploadArea'
 import { QuestionTypeBuilder } from '@/components/forms/QuestionTypeBuilder'
 import { createAssignment, uploadMaterial } from '@/services/api'
 import { useGenerationStore, useAssignmentStore } from '@/store'
+import { ALLOWED_CLASSES } from '@/constants'
 import type { QuestionTypeConfig } from '@/types'
 
 // ── Zod Schemas ───────────────────────────────────────────────
@@ -19,7 +20,12 @@ const step1Schema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters').max(120),
   schoolName: z.string(),
   subject: z.string().min(1, 'Subject required'),
-  className: z.string().min(1, 'Class name required'),
+  className: z.enum([
+    'Nursery', 'LKG', 'UKG',
+    '1st', '2nd', '3rd', '4th', '5th',
+    '6th', '7th', '8th', '9th', '10th',
+    '11th', '12th'
+  ], { required_error: 'Class selection required' }),
   estimatedDuration: z
     .number({ message: 'Duration is required' })
     .min(10, 'At least 10 minutes')
@@ -27,7 +33,10 @@ const step1Schema = z.object({
 })
 
 const step2Schema = z.object({
-  dueDate: z.string().min(1, 'Due date required'),
+  dueDate: z.string().refine((val) => {
+    const d = new Date(val)
+    return !isNaN(d.getTime()) && d >= new Date(new Date().setHours(0,0,0,0))
+  }, 'Due date must be today or later'),
   questionTypes: z
     .array(
       z.object({
@@ -76,6 +85,23 @@ const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputEl
   }
 )
 Input.displayName = 'Input'
+
+const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(
+  ({ error, ...props }, ref) => {
+    return (
+      <select
+        {...props}
+        ref={ref}
+        className={`w-full px-4 py-2.5 md:py-3.5 text-[14px] md:text-[15px] font-medium border border-surface-border md:border-[#e4e4e7] rounded-xl md:rounded-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-ink/10 transition-shadow ${
+          error ? 'border-red-500 md:ring-2 md:ring-red-500' : ''
+        } ${props.className || ''}`}
+      >
+        {props.children}
+      </select>
+    )
+  }
+)
+Select.displayName = 'Select'
 
 function StepIndicator({ c1, c2, step }: { c1: any; c2: any; step: 1 | 2 }) {
   const s1 = useWatch({ control: c1 })
@@ -297,11 +323,16 @@ export default function NewAssignmentPage() {
                     />
                   </Field>
                   <Field label="Class / Grade" error={e1.className?.message}>
-                    <Input
+                    <Select
                       {...r1('className')}
-                      placeholder="e.g. Class 8"
                       error={!!e1.className}
-                    />
+                      defaultValue=""
+                    >
+                      <option value="" disabled hidden>Select Class</option>
+                      {ALLOWED_CLASSES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </Select>
                   </Field>
                 </div>
 
@@ -356,47 +387,12 @@ export default function NewAssignmentPage() {
                 {/* Due Date */}
                 <div>
                   <Field label="Due Date" error={e2.dueDate?.message}>
-                    <div className="relative group flex items-center">
-                      <Input
-                        {...r2('dueDate')}
-                        placeholder="DD-MM-YYYY"
-                        error={!!e2.dueDate}
-                        onChange={(e) => {
-                          let val = e.target.value.replace(/\D/g, '')
-                          if (val.length > 8) val = val.slice(0, 8)
-                          let formatted = val
-                          if (val.length > 4) {
-                            formatted = `${val.slice(0, 2)}-${val.slice(2, 4)}-${val.slice(4)}`
-                          } else if (val.length > 2) {
-                            formatted = `${val.slice(0, 2)}-${val.slice(2)}`
-                          }
-                          setV2('dueDate', formatted, { shouldValidate: true })
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => dateInputRef.current?.showPicker()}
-                        className="absolute right-0 inset-y-0 px-4 flex items-center justify-center cursor-pointer"
-                        aria-label="Open Calendar"
-                      >
-                        <Calendar
-                          size={18}
-                          className="text-[#1c1c1e]"
-                        />
-                      </button>
-                      <input
-                        type="date"
-                        ref={dateInputRef}
-                        className="absolute bottom-0 right-4 w-0 h-0 opacity-0 pointer-events-none"
-                        onChange={(e) => {
-                          const val = e.target.value // YYYY-MM-DD
-                          if (val) {
-                            const [y, m, d] = val.split('-')
-                            setV2('dueDate', `${d}-${m}-${y}`, { shouldValidate: true, shouldDirty: true })
-                          }
-                        }}
-                      />
-                    </div>
+                    <Input
+                      {...r2('dueDate')}
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      error={!!e2.dueDate}
+                    />
                   </Field>
                 </div>
 

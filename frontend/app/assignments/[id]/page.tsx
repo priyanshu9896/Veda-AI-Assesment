@@ -60,8 +60,12 @@ export default function AssignmentDetailPage() {
               const pollRes = await getAssignment(assignmentId)
               if (pollRes.success && pollRes.data) {
                 const pollStatus = pollRes.data.status
-                if (pollStatus === 'completed' && pollRes.data.paper) {
-                  setCompleted(pollRes.data.paper)
+                if (pollStatus === 'completed') {
+                  if (pollRes.data.paper) {
+                    setCompleted(pollRes.data.paper)
+                  } else {
+                    setStage('completed', 100)
+                  }
                   clearInterval(interval)
                 } else if (pollStatus === 'failed') {
                   setFailed('Generation failed. Please try again.')

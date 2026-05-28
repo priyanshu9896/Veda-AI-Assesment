@@ -29,6 +29,7 @@ export const PaperOutputSchema = z.object({
       medium: z.number(),
       hard: z.number(),
     }),
+    topicAdherenceScore: z.number().min(0).max(100).optional(),
   }),
   studentInfo: z.object({
     nameEnabled: z.boolean().default(true),
@@ -50,9 +51,17 @@ export const CreateAssignmentSchema = z.object({
   title: z.string().min(2).max(120),
   schoolName: z.string().min(2),
   subject: z.string().min(1),
-  className: z.string().min(1),
+  className: z.enum([
+    'Nursery', 'LKG', 'UKG',
+    '1st', '2nd', '3rd', '4th', '5th',
+    '6th', '7th', '8th', '9th', '10th',
+    '11th', '12th'
+  ]),
   estimatedDuration: z.number().min(10).max(300),
-  dueDate: z.string().min(1),
+  dueDate: z.string().refine((val) => {
+    const d = new Date(val)
+    return !isNaN(d.getTime()) && d >= new Date(new Date().setHours(0,0,0,0))
+  }, { message: "Invalid or past due date" }),
   questionTypes: z
     .array(
       z.object({

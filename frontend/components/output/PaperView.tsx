@@ -1,17 +1,37 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Download, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DIFFICULTY_DISPLAY } from '@/constants'
 import { regenerateSection, getPdfUrl } from '@/services/api'
 import type { GeneratedPaper, PaperSection, Question } from '@/types'
-import { useGenerationStore } from '@/store'
+import { useGenerationStore, useAuthStore } from '@/store'
 import { PieChart } from 'lucide-react'
 
 // Helper to strip [Regenerated] markers from display
 function cleanText(text: string): string {
   return text.replace(/\[Regenerated\]\s*/g, '').trim()
+}
+
+// ── Formatted Question Text ──────────────────────────────────
+function FormattedQuestionText({ text }: { text: string }) {
+  const parts = text.split(/(?=\n?[A-D]\))/)
+  if (parts.length === 5) {
+    return (
+      <>
+        <span className="whitespace-pre-wrap">{cleanText(parts[0])}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-3 ml-4 w-full block">
+          {parts.slice(1).map((opt, i) => (
+            <div key={i} className="flex text-[15px] text-ink/90 whitespace-pre-wrap">
+              {cleanText(opt)}
+            </div>
+          ))}
+        </div>
+      </>
+    )
+  }
+  return <span className="whitespace-pre-wrap">{cleanText(text)}</span>
 }
 
 // ── AI Message Banner ──────────────────────────────────────────
@@ -23,9 +43,11 @@ export function AIMessageBanner({
   paperId: string
 }) {
   const handleDownload = () => {
+    const token = useAuthStore.getState().token || ''
+    
     // Download paper
     const link1 = document.createElement('a')
-    link1.href = `${getPdfUrl(paperId)}?type=paper`
+    link1.href = `${getPdfUrl(paperId)}?type=paper&token=${token}`
     link1.download = 'paper.pdf'
     document.body.appendChild(link1)
     link1.click()
@@ -34,7 +56,7 @@ export function AIMessageBanner({
     // Download answers
     setTimeout(() => {
       const link2 = document.createElement('a')
-      link2.href = `${getPdfUrl(paperId)}?type=answers`
+      link2.href = `${getPdfUrl(paperId)}?type=answers&token=${token}`
       link2.download = 'answers.pdf'
       document.body.appendChild(link2)
       link2.click()
@@ -118,7 +140,7 @@ function QuestionItem({
         <div className="flex-1">
           <span className="font-medium">{number}.</span>{' '}
           <DifficultyTag level={question.difficulty} />{' '}
-          {cleanText(question.text)}{' '}
+          <FormattedQuestionText text={question.text} />{' '}
           <span className="text-ink-muted whitespace-nowrap">[{question.marks} Mark{question.marks !== 1 ? 's' : ''}]</span>
         </div>
         
@@ -272,13 +294,20 @@ function AnswerKey({ sections }: { sections: PaperSection[] }) {
 
 // ── Main Paper View ───────────────────────────────────────────
 export function PaperView({
-  paper,
+  paper: initialPaper,
   paperId,
 }: {
   paper: GeneratedPaper
   paperId: string
 }) {
-  const setCompleted = useGenerationStore((s) => s.setCompleted)
+  const { paper, setCompleted, clearPaper } = useGenerationStore()
+
+  useEffect(() => {
+    if (initialPaper) setCompleted(initialPaper)
+  }, [initialPaper, setCompleted])
+
+  if (!paper) return null
+
   const { metadata, studentInfo, sections } = paper
 
   // Count start index per section
@@ -300,33 +329,6 @@ export function PaperView({
       {paper.aiMessage && (
         <AIMessageBanner message={paper.aiMessage} paperId={paperId} />
       )}
-
-      {/* Question Analytics Block */}
-      <div className="bg-white rounded-2xl shadow-card px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-full">
-        <div className="flex items-center gap-3">
-          <div className="bg-orange-50 text-brand-orange p-2 rounded-xl">
-            <PieChart size={20} />
-          </div>
-          <div>
-            <h3 className="font-bold text-ink text-sm">Question Analytics</h3>
-            <p className="text-xs text-ink-muted">Difficulty Distribution</p>
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <div className="text-center">
-            <p className="text-xl font-black text-[#22c55e]">{metadata.difficultyDistribution?.easy ?? 0}</p>
-            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Easy</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-black text-[#f59e0b]">{metadata.difficultyDistribution?.medium ?? 0}</p>
-            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Moderate</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-black text-[#ef4444]">{metadata.difficultyDistribution?.hard ?? 0}</p>
-            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Challenging</p>
-          </div>
-        </div>
-      </div>
 
       {/* Paper body */}
       <div className="bg-white rounded-2xl shadow-card px-8 py-10 space-y-6 max-w-full">

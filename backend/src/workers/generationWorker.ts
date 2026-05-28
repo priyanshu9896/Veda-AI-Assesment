@@ -116,39 +116,64 @@ export function startGenerationWorker(redisUrl: string): void {
 
           let text = ''
           let provider = 'groq'
-
-          try {
-            const groqClient = getGroqClient()
-            const result = await groqClient.chat.completions.create({
-              model: 'llama3-70b-8192',
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.7,
-              response_format: { type: 'json_object' }
-            })
-            text = result.choices[0]?.message?.content || ''
-          } catch (err) {
-            console.warn('[Worker] Groq failed, falling back to OpenRouter')
-            provider = 'openrouter'
-            const openRouterClient = getOpenRouterClient()
-            const result = await openRouterClient.chat.completions.create({
-              model: 'meta-llama/llama-3-70b-instruct',
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.7,
-            })
-            text = result?.choices?.[0]?.message?.content || ''
-          }
-
-          if (!text) {
-            throw new Error('AI Provider returned empty response or rate limit exceeded.')
-          }
-
-          // Extract JSON
-          const jsonMatch = text.match(/\{[\s\S]*\}/)
-          if (!jsonMatch) throw new Error('AI returned no JSON')
-          paperData = JSON.parse(jsonMatch[0])
           
-          if (paperData && typeof paperData === 'object' && 'summary' in paperData) {
-            (paperData as any).summary.generatedBy = provider
+          const maxRetries = 3
+          let attempts = 0
+          let isValid = false
+
+          while (!isValid && attempts < maxRetries) {
+            attempts++
+            try {
+              try {
+                const groqClient = getGroqClient()
+                const result = await groqClient.chat.completions.create({
+                  model: 'llama-3.3-70b-versatile',
+                  messages: [{ role: 'user', content: prompt }],
+                  temperature: 0.7,
+                  response_format: { type: 'json_object' }
+                })
+                text = result.choices[0]?.message?.content || ''
+              } catch (err) {
+                console.warn('[Worker] Groq failed, falling back to OpenRouter')
+                provider = 'openrouter'
+                const openRouterClient = getOpenRouterClient()
+                const result = await openRouterClient.chat.completions.create({
+                  model: 'meta-llama/llama-3-70b-instruct',
+                  messages: [{ role: 'user', content: prompt }],
+                  temperature: 0.7,
+                })
+                text = result?.choices?.[0]?.message?.content || ''
+              }
+
+              if (!text) {
+                throw new Error('AI Provider returned empty response or rate limit exceeded.')
+              }
+
+              // Extract JSON
+              const jsonMatch = text.match(/\{[\s\S]*\}/)
+              if (!jsonMatch) throw new Error('AI returned no JSON')
+              const parsedData = JSON.parse(jsonMatch[0])
+              
+              // Validate Topic Adherence
+              const adherenceScore = parsedData?.metadata?.topicAdherenceScore
+              if (typeof adherenceScore === 'number' && adherenceScore < 85) {
+                if (attempts < maxRetries) {
+                  console.warn(`[Worker] Topic adherence too low (${adherenceScore}). Retrying...`)
+                  continue // Try again
+                } else {
+                  console.warn(`[Worker] Topic adherence low (${adherenceScore}) but max retries reached. Proceeding.`)
+                }
+              }
+
+              paperData = parsedData
+              if (paperData && typeof paperData === 'object' && 'summary' in paperData) {
+                (paperData as any).summary.generatedBy = provider
+              }
+              
+              isValid = true // Successful validation
+            } catch (err) {
+              if (attempts === maxRetries) throw err
+            }
           }
         }
 

@@ -109,9 +109,33 @@ export async function generatePdfBuffer(paper: IPaper): Promise<Buffer> {
       // Clean out [Regenerated] markers for the final PDF
       const cleanText = q.text.replace(/\[Regenerated\]\s*/g, '').trim()
       const difficultyTag = `[${(q.difficulty || 'medium').toUpperCase()}]`
-      const qText = `${qNum}. ${difficultyTag} ${cleanText} [${q.marks} Mark${q.marks > 1 ? 's' : ''}]`
-      drawText(sanitizeText(qText), 10, font)
-      currentY -= 10
+      
+      const parts = cleanText.split(/(?=\n?[A-D]\))/)
+      if (parts.length === 5) {
+        // It's an MCQ with exactly 4 options! Format it as a 2x2 grid
+        const qText = `${qNum}. ${difficultyTag} ${parts[0].trim()} [${q.marks} Mark${q.marks > 1 ? 's' : ''}]`
+        drawText(sanitizeText(qText), 10, font)
+        currentY -= 5
+        
+        const optA = sanitizeText(parts[1].trim())
+        const optB = sanitizeText(parts[2].trim())
+        const optC = sanitizeText(parts[3].trim())
+        const optD = sanitizeText(parts[4].trim())
+        
+        // Row 1
+        page.drawText(optA, { x: margin + 20, y: currentY, size: 10, font })
+        page.drawText(optB, { x: margin + 250, y: currentY, size: 10, font })
+        currentY -= 14
+        
+        // Row 2
+        page.drawText(optC, { x: margin + 20, y: currentY, size: 10, font })
+        page.drawText(optD, { x: margin + 250, y: currentY, size: 10, font })
+        currentY -= 10
+      } else {
+        const qText = `${qNum}. ${difficultyTag} ${cleanText} [${q.marks} Mark${q.marks > 1 ? 's' : ''}]`
+        drawText(sanitizeText(qText), 10, font)
+        currentY -= 10
+      }
       qNum++
     }
   }
