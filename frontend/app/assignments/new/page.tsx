@@ -155,6 +155,10 @@ export default function NewAssignmentPage() {
   const [file, setFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const dateInputRef = useRef<HTMLInputElement>(null)
+  
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { setQueued } = useGenerationStore()
   const { addAssignment } = useAssignmentStore()
@@ -178,6 +182,7 @@ export default function NewAssignmentPage() {
     handleSubmit: hs2,
     control: c2,
     setValue: setV2,
+    getValues: getV2,
     formState: { errors: e2 },
   } = useForm<Step2Values>({
     resolver: zodResolver(step2Schema),
@@ -190,6 +195,89 @@ export default function NewAssignmentPage() {
       ],
     },
   })
+
+  const resetSilenceTimeout = () => {
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+    }
+    silenceTimeoutRef.current = setTimeout(() => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      setIsListening(false)
+    }, 5000)
+  }
+
+  const clearSilenceTimeout = () => {
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+    }
+  }
+
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      clearSilenceTimeout()
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.")
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognitionRef.current = recognition
+    recognition.continuous = true
+    recognition.interimResults = false
+    recognition.lang = 'en-US'
+
+    recognition.onstart = () => {
+      setIsListening(true)
+      resetSilenceTimeout()
+    }
+    
+    recognition.onresult = (event: any) => {
+      let newTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        newTranscript += event.results[i][0].transcript;
+      }
+      
+      if (newTranscript) {
+        const currentText = getV2('instructions') || ''
+        const newText = currentText ? `${currentText.trim()} ${newTranscript}`.trim() : newTranscript
+        setV2('instructions', newText, { shouldValidate: true, shouldDirty: true })
+      }
+      
+      resetSilenceTimeout()
+    }
+
+    recognition.onerror = (event: any) => {
+      clearSilenceTimeout()
+      setIsListening(false)
+      if (event.error === 'not-allowed') {
+        alert("Microphone permission denied. Please allow microphone access.")
+      } else if (event.error !== 'no-speech') {
+        alert(`Speech recognition error: ${event.error}`)
+      }
+    }
+
+    recognition.onend = () => {
+      clearSilenceTimeout()
+      setIsListening(false)
+    }
+
+    try {
+      recognition.start()
+    } catch (e) {
+      clearSilenceTimeout()
+      setIsListening(false)
+    }
+  }
 
   const onStep1Submit = (data: Step1Values) => {
     setStep1Data(data)
@@ -426,8 +514,34 @@ export default function NewAssignmentPage() {
                         placeholder="e.g. Generate a question paper for 3 hour exam duration with focus on Chapter 1–3..."
                         className="w-full px-4 py-3 md:py-3.5 text-[14px] font-medium border border-[#e4e4e7] md:border-dashed rounded-xl md:rounded-[16px] bg-[#fcfcfc] focus:outline-none focus:ring-2 focus:ring-ink/10 transition-shadow resize-none placeholder:font-normal placeholder:text-[#A1A1AA]"
                       />
-                      <div className="absolute bottom-3 right-3 flex items-center justify-center text-[#A1A1AA] hover:text-[#1c1c1e] cursor-pointer transition-colors">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                      <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm border border-black/5">
+                        <AnimatePresence>
+                          {isListening && (
+                            <motion.span 
+                              initial={{ opacity: 0, width: 0 }}
+                              animate={{ opacity: 1, width: 'auto' }}
+                              exit={{ opacity: 0, width: 0 }}
+                              className="text-[12px] font-medium text-red-500 animate-pulse px-2 whitespace-nowrap overflow-hidden"
+                            >
+                              Listening...
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                        <div 
+                          onClick={toggleListening}
+                          title={isListening ? "Stop listening" : "Start speaking"}
+                          className={`flex items-center justify-center cursor-pointer transition-colors p-1.5 rounded-full ${
+                            isListening 
+                              ? 'bg-red-50 text-red-500 hover:bg-red-100' 
+                              : 'text-[#A1A1AA] hover:text-[#1c1c1e] hover:bg-gray-100'
+                          }`}
+                        >
+                          {isListening ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                          ) : (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Field>
