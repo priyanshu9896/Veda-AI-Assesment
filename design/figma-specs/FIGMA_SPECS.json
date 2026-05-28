@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "source": "Figma file nB2HMm1BhTpmHcHrmEslGB (VedaAI — Hiring Assignment)",
+    "figmaUrl": "https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment",
+    "extractedAt": "2026-05-28",
+    "extractionMethod": "design/screens PNG exports (Figma MCP failed 2026-05-28: get_metadata/get_design_context returned 'file could not be accessed'; account View seat Starter priyanshhdubey@gmail.com)",
+    "mcpAttempts": [
+      { "tool": "whoami", "status": "ok" },
+      { "tool": "get_metadata", "status": "failed", "fileKey": "nB2HMm1BhTpmHcHrmEslGB" },
+      { "tool": "get_design_context", "status": "failed", "fileKey": "nB2HMm1BhTpmHcHrmEslGB" }
+    ],
+    "screens": [
+      "01-empty-desktop", "01-empty-mobile",
+      "02-list-desktop", "02-list-mobile",
+      "03-create-desktop", "03-create-mobile",
+      "04-output-desktop", "04-output-mobile"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "background": "#f5f5f5",
+      "surface": "#ffffff",
+      "surfaceMuted": "#fafafa",
+      "surfaceHover": "#f4f4f5",
+      "ink": "#1c1c1e",
+      "inkSecondary": "#858585",
+      "inkTertiary": "#a1a1aa",
+      "inkMeta": "#4c4c4c",
+      "accent": "#ff6136",
+      "accentGlow": "rgba(255, 97, 54, 0.15)",
+      "border": "#e4e4e7",
+      "borderLight": "#e5e5e5",
+      "borderDashed": "#d4d4d8",
+      "success": "#4caf50",
+      "successBg": "rgba(76, 175, 80, 0.15)",
+      "danger": "#ff4141",
+      "navDark": "#171717",
+      "outputShell": "#2d2d2d",
+      "notificationDot": "#ff4141"
+    },
+    "typography": {
+      "fontFamily": "Geist, system-ui, sans-serif",
+      "pageTitle": { "size": "22px", "weight": 700, "lineHeight": "tight" },
+      "pageSubtitle": { "size": "14px", "weight": 400, "color": "#858585" },
+      "mobileTitle": { "size": "17px", "weight": 700 },
+      "navItem": { "size": "15px", "weight": 500 },
+      "navItemActive": { "size": "15px", "weight": 600 },
+      "cardTitle": { "size": "19px", "weight": 700 },
+      "cardMeta": { "size": "12.5px", "weight": 500 },
+      "breadcrumb": { "size": "15px", "weight": 700 },
+      "sectionTitle": { "size": "20px", "weight": 600 },
+      "sectionSubtitle": { "size": "13px", "weight": 400, "color": "#a1a1aa" },
+      "input": { "size": "14px", "weight": 500 },
+      "inputDesktop": { "size": "15px", "weight": 500 },
+      "button": { "size": "15px", "weight": 600 },
+      "bottomNav": { "size": "12px", "weight": 500 }
+    },
+    "spacing": {
+      "shellPadding": { "mobile": "10px", "desktop": "16px" },
+      "shellGap": "16px",
+      "sidebarWidth": "280px",
+      "sidebarPaddingX": "24px",
+      "sidebarPaddingY": "32px",
+      "contentPadding": { "mobile": "20px", "desktop": "28px" },
+      "cardPadding": { "mobile": "24px", "desktop": "32px" },
+      "sectionGap": "20px",
+      "gridGapX": "32px",
+      "gridGapY": "20px"
+    },
+    "radius": {
+      "shell": "24px",
+      "card": "24px",
+      "cardLarge": "32px",
+      "navItem": "16px",
+      "profileCard": "20px",
+      "button": "9999px",
+      "input": "12px",
+      "inputMobile": "16px",
+      "upload": "20px",
+      "bottomNav": "24px"
+    },
+    "shadows": {
+      "soft": "0 2px 12px rgba(0, 0, 0, 0.02)",
+      "card": "0 2px 12px rgba(0, 0, 0, 0.03)",
+      "cardHover": "0 4px 20px rgba(0, 0, 0, 0.06)",
+      "filterBar": "0 2px 16px rgba(0, 0, 0, 0.03)",
+      "cta": "0 4px 12px rgba(0, 0, 0, 0.1)",
+      "createBtn": "0 4px 16px rgba(255, 97, 54, 0.15)",
+      "fab": "0 4px 24px rgba(0, 0, 0, 0.12)",
+      "formCard": "0 4px 24px rgba(0, 0, 0, 0.03)"
+    },
+    "sizes": {
+      "headerDesktop": "60px",
+      "headerMobile": "72px",
+      "bottomNav": "72px",
+      "createButton": "52px",
+      "filterBar": "64px",
+      "searchInput": "46px",
+      "filterMobile": "52px",
+      "fab": "56px",
+      "assignmentCardHeight": "142px",
+      "navIcon": "20px",
+      "badge": { "height": "22px", "minWidth": "28px", "fontSize": "12px" },
+      "greenDot": { "outer": "24px", "inner": "12px" },
+      "stepBar": "6px"
+    }
+  },
+  "screens": {
+    "01-empty-desktop": {
+      "route": "/assignments",
+      "state": "empty",
+      "viewport": "desktop",
+      "layout": ["sidebar", "pageHeader", "emptyStateCentered"],
+      "emptyState": {
+        "illustrationSize": "192x176",
+        "title": "No assignments yet",
+        "cta": "+ Create Your First Assignment",
+        "ctaHeight": "52px",
+        "ctaRadius": "full"
+      }
+    },
+    "01-empty-mobile": {
+      "route": "/assignments",
+      "state": "empty",
+      "viewport": "mobile",
+      "layout": ["mobileHeader", "emptyStateCentered", "fab", "bottomNav"],
+      "notes": "No in-page back/title on empty; MobileHeader only"
+    },
+    "02-list-desktop": {
+      "route": "/assignments",
+      "state": "list",
+      "viewport": "desktop",
+      "header": { "greenDot": true, "title": "Assignments", "subtitle": "Manage and create assignments for your classes." },
+      "filterBar": { "height": 64, "combined": true, "filterLabel": "Filter By", "searchPlaceholder": "Search Assignment", "searchWidth": 320 },
+      "grid": { "columns": 2, "gapX": 32, "gapY": 20 },
+      "card": { "height": 142, "radius": 24, "titleSize": 19, "underlineTitle": true },
+      "footerCta": { "centered": true, "gradientFade": true, "label": "Create Assignment" }
+    },
+    "02-list-mobile": {
+      "route": "/assignments",
+      "state": "list",
+      "viewport": "mobile",
+      "subHeader": { "backButton": true, "title": "Assignments", "titleSize": 17 },
+      "filterBar": { "split": true, "filterLabel": "Filter", "searchPlaceholder": "Search Name", "height": 52 },
+      "cards": { "stacked": true, "metaSingleLine": true },
+      "fab": { "size": 56, "position": "bottom-24 right-5", "iconColor": "#ff6136" },
+      "bottomNav": { "active": "Assignments", "activeIndicator": "underline" }
+    },
+    "03-create-desktop": {
+      "route": "/assignments/new",
+      "step": 2,
+      "viewport": "desktop",
+      "maxWidth": 800,
+      "pageHeader": { "greenDot": true, "title": "Create Assignment", "subtitle": "Set up a new assignment for your students" },
+      "stepIndicator": { "segments": 2, "height": 6, "fill": "#1c1c1e", "track": "#e4e4e7" },
+      "formCard": { "radius": 32, "padding": 32 },
+      "fields": ["upload", "dueDate", "questionTypes", "instructions"],
+      "nav": { "previous": "outline white", "next": "primary black", "outsideCard": true }
+    },
+    "03-create-mobile": {
+      "route": "/assignments/new",
+      "step": 2,
+      "viewport": "mobile",
+      "subHeader": { "back": true, "title": "Create Assignment", "stepBarBelow": true },
+      "questionRows": { "cardStyle": true, "stepperTray": "#f4f4f5" },
+      "nav": { "buttonsFullWidth": true, "height": 48 }
+    },
+    "04-output-desktop": {
+      "route": "/assignments/[id]",
+      "state": "completed",
+      "viewport": "desktop",
+      "breadcrumb": "Create New",
+      "shell": { "bg": "#2d2d2d", "radius": 32, "padding": 24 },
+      "aiBanner": { "textWhite": true, "downloadPill": true },
+      "paper": { "bg": "#ffffff", "radius": 24, "padding": 40 }
+    },
+    "04-output-mobile": {
+      "route": "/assignments/[id]",
+      "state": "completed",
+      "viewport": "mobile",
+      "shell": { "radius": 24, "padding": 16 },
+      "download": "circular icon button"
+    }
+  }
+}

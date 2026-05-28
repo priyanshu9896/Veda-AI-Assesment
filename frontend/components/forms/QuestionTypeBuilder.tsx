@@ -26,7 +26,7 @@ function QuestionTypeRow({
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-[1fr_32px_110px_110px] gap-3 md:gap-4 items-stretch md:items-center py-3 md:py-1 border border-[#e4e4e7] md:border-none rounded-[16px] md:rounded-none px-3 md:px-0">
+    <div className="flex flex-col md:grid md:grid-cols-[1fr_32px_110px_110px] gap-3 md:gap-4 items-stretch md:items-center py-4 md:py-1 border border-[#e4e4e7] md:border-none rounded-[16px] md:rounded-none px-4 md:px-0 bg-white md:bg-transparent shadow-[0_1px_4px_rgba(0,0,0,0.02)] md:shadow-none">
       {/* Question type selector + Mobile Remove */}
       <div className="flex items-center gap-2 relative w-full">
         <div className="relative w-full">
@@ -83,7 +83,7 @@ function QuestionTypeRow({
       </button>
 
       {/* Steppers */}
-      <div className="flex md:contents items-center justify-around gap-4 bg-[#f4f4f5] md:bg-transparent rounded-[16px] md:rounded-none py-2 px-2 md:p-0">
+      <div className="flex md:contents items-center justify-around gap-4 bg-[#f4f4f5] md:bg-transparent rounded-[12px] md:rounded-none py-3 px-3 md:p-0">
         <div className="flex flex-col items-center gap-1.5 md:gap-0 w-full md:w-[110px]">
           <span className="block md:hidden text-[12px] font-medium text-[#1c1c1e]">No. of Questions</span>
           <Stepper

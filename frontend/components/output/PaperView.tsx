@@ -77,25 +77,27 @@ export function AIMessageBanner({
   }
 
   return (
-    <div className="bg-ink text-white rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
-      <p className="text-[15px] sm:text-base leading-relaxed font-medium">{message}</p>
-      
-      {/* Desktop Download Button (White Pill) */}
+    <div className="flex flex-col gap-4 text-white">
+      <p className="text-[15px] sm:text-[16px] leading-relaxed font-medium">
+        {message}
+      </p>
+
+      {/* Desktop — white pill per Figma 04-output-desktop */}
       <button
         onClick={handleDownload}
-        className="hidden sm:inline-flex self-start items-center gap-2 bg-white text-ink hover:bg-gray-100 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors active:scale-[0.97]"
+        className="hidden sm:inline-flex self-start items-center gap-2 bg-white text-[#1c1c1e] hover:bg-gray-100 px-5 h-[40px] rounded-full text-[14px] font-semibold transition-colors active:scale-[0.97]"
       >
-        <Download size={16} />
+        <Download size={16} strokeWidth={2.5} />
         Download as PDF
       </button>
 
-      {/* Mobile Download Button (Dark Circle) */}
+      {/* Mobile — circular download per Figma 04-output-mobile */}
       <button
         onClick={handleDownload}
-        className="sm:hidden self-start flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors active:scale-[0.97]"
+        className="sm:hidden self-start flex items-center justify-center w-10 h-10 bg-white/15 hover:bg-white/25 text-white rounded-full transition-colors active:scale-[0.97]"
         title="Download as PDF"
       >
-        <Download size={18} />
+        <Download size={18} strokeWidth={2.5} />
       </button>
     </div>
   )
@@ -335,15 +337,15 @@ export function PaperView({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-5"
+      className="figma-output-shell space-y-5 lg:space-y-6"
     >
-      {/* AI Banner */}
+      {/* AI message — inside dark shell (Figma 04-output) */}
       {paper.aiMessage && (
         <AIMessageBanner message={paper.aiMessage} paperId={paperId} metadata={metadata} />
       )}
 
-      {/* Paper body */}
-      <div className="bg-white rounded-2xl shadow-card px-8 py-10 space-y-6 max-w-full">
+      {/* Paper body — white card inside shell */}
+      <div className="bg-white rounded-[24px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] px-6 py-8 lg:px-10 lg:py-10 space-y-6 max-w-full">
         {/* Header */}
         <div className="text-center space-y-2 mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#1c1c1e]">{metadata.schoolName}</h1>

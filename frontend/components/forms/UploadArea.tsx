@@ -85,10 +85,10 @@ export function UploadArea({ onFileSelect, onClear, file, error }: UploadAreaPro
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cn(
-          'border border-dashed rounded-[20px] py-5 md:py-6 px-6 flex flex-col items-center gap-4 transition-colors duration-150 cursor-pointer',
+          'border border-dashed rounded-[20px] py-6 md:py-8 px-6 flex flex-col items-center gap-3 transition-colors duration-150 cursor-pointer bg-[#fafafa]/50',
           dragging
             ? 'border-[#1c1c1e] bg-black/5'
-            : 'border-[#d4d4d8] hover:border-black/30 hover:bg-black/[0.02]'
+            : 'border-[#d4d4d8] hover:border-[#a1a1aa] hover:bg-[#fafafa]'
         )}
       >
         <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#f4f4f5] flex items-center justify-center mb-1">

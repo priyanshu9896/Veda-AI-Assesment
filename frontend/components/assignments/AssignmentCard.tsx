@@ -48,7 +48,7 @@ export function AssignmentCard({ assignment, index = 0 }: AssignmentCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.04, ease: 'easeOut' }}
       className={cn(
-        'bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#f0f0f0] cursor-pointer hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-200 group relative flex flex-col justify-between h-[142px]',
+        'bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#f0f0f0]/80 cursor-pointer hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-200 group relative flex flex-col justify-between min-h-[142px] lg:h-[142px]',
         deleting && 'opacity-50 pointer-events-none'
       )}
       onClick={handleView}
@@ -96,17 +96,17 @@ export function AssignmentCard({ assignment, index = 0 }: AssignmentCardProps) {
         </div>
       </div>
 
-      {/* Meta row */}
-      <div className="flex items-center justify-between text-[12.5px] mt-auto">
-        <span>
+      {/* Meta row — Figma: single line on mobile, split on desktop */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] mt-auto lg:justify-between">
+        <span className="whitespace-nowrap">
           <span className="font-bold text-ink">Assigned on</span>
-          <span className="font-bold mx-1"> : </span>
+          <span className="font-bold"> : </span>
           <span className="font-medium text-[#4c4c4c]">{formatDate(assignment.createdAt)}</span>
         </span>
         {assignment.dueDate && (
-          <span>
+          <span className="whitespace-nowrap">
             <span className="font-bold text-ink">Due</span>
-            <span className="font-bold mx-1"> : </span>
+            <span className="font-bold"> : </span>
             <span className="font-medium text-[#4c4c4c]">{formatDate(assignment.dueDate)}</span>
           </span>
         )}

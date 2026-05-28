@@ -11,9 +11,10 @@ interface AppShellProps {
   headerIcon?: React.ReactNode
   showBack?: boolean
   assignmentCount?: number
+  titleHref?: string
 }
 
-export function AppShell({ children, breadcrumb, subtitle, headerIcon, showBack, assignmentCount }: AppShellProps) {
+export function AppShell({ children, breadcrumb, subtitle, headerIcon, showBack, assignmentCount, titleHref }: AppShellProps) {
   return (
     <ProtectedRoute>
       <div className="h-screen w-full overflow-hidden px-2.5 py-3 sm:px-4 lg:p-4 bg-background text-foreground">
@@ -26,10 +27,10 @@ export function AppShell({ children, breadcrumb, subtitle, headerIcon, showBack,
         <div className="flex h-full flex-1 flex-col gap-4 min-w-0 overflow-hidden">
           {/* Headers */}
           <MobileHeader />
-          <PageHeader title={breadcrumb} subtitle={subtitle} icon={headerIcon} showBack={showBack} assignmentCount={assignmentCount} />
+          <PageHeader title={breadcrumb} subtitle={subtitle} icon={headerIcon} showBack={showBack} assignmentCount={assignmentCount} titleHref={titleHref} />
 
           {/* Page Content */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide pb-[110px] lg:pb-0">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-[110px] lg:pb-0 lg:flex lg:flex-col">
             {children}
           </div>
         </div>

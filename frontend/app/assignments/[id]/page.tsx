@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { GenerationTimeline } from '@/components/output/GenerationTimeline'
@@ -107,20 +107,22 @@ export default function AssignmentDetailPage() {
 
   const isGenerating = stage !== 'completed' && stage !== 'failed'
 
-  return (
-    <AppShell breadcrumb="Create Assignment" showBack>
-      {/* Top bar right action */}
-      <div className="hidden lg:flex items-center justify-end px-7 pt-4">
-        <Link
-          href="/assignments/new"
-          className="flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink transition-colors"
-        >
-          <Plus size={16} />
-          Create New
-        </Link>
-      </div>
+  const showPaper = !isFetching && !isGenerating && stage !== 'failed' && !!paper
 
-      <div className="px-4 lg:px-7 py-4 lg:py-6 max-w-3xl mx-auto">
+  return (
+    <AppShell
+      breadcrumb={showPaper ? 'Create New' : 'Create Assignment'}
+      titleHref={showPaper ? '/assignments/new' : undefined}
+      headerIcon={
+        showPaper ? (
+          <Sparkles className="h-[16px] w-[16px] text-[#858585]" strokeWidth={2.5} />
+        ) : (
+          <div className="h-3 w-3 rounded-full bg-[#4caf50]" />
+        )
+      }
+      showBack
+    >
+      <div className="px-4 lg:px-7 py-4 lg:py-6 max-w-full lg:max-w-[960px] mx-auto w-full">
         {isFetching ? (
           <PaperSkeleton />
         ) : isGenerating ? (

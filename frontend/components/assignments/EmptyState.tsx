@@ -9,7 +9,7 @@ export function EmptyState() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex-1 flex flex-col items-center justify-center px-6 py-16 min-h-[60vh]"
+      className="flex-1 flex flex-col items-center justify-center px-6 py-12 lg:py-16 min-h-[calc(100vh-220px)] lg:min-h-[60vh]"
     >
       {/* Illustration */}
       <div className="relative w-48 h-44 mb-8">
@@ -58,10 +58,10 @@ export function EmptyState() {
       </div>
 
       {/* Text */}
-      <h2 className="text-xl font-bold text-ink mb-3 text-center">
+      <h2 className="text-[20px] lg:text-xl font-bold text-ink mb-3 text-center">
         No assignments yet
       </h2>
-      <p className="text-ink-muted text-sm text-center max-w-xs leading-relaxed mb-8">
+      <p className="text-[#858585] text-[14px] text-center max-w-[320px] leading-relaxed mb-8">
         Create your first assignment to start collecting and grading student
         submissions. You can set up rubrics, define marking criteria, and let AI
         assist with grading.
@@ -70,7 +70,7 @@ export function EmptyState() {
       {/* CTA */}
       <Link
         href="/assignments/new"
-        className="inline-flex items-center gap-2 bg-ink text-white rounded-full px-7 py-3.5 text-sm font-medium hover:bg-ink/90 active:scale-[0.97] transition-all duration-150 shadow-sm"
+        className="inline-flex items-center gap-2 bg-[#1c1c1e] text-white rounded-full px-7 h-[52px] text-[15px] font-semibold hover:bg-black active:scale-[0.97] transition-all duration-150 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
       >
         <Plus size={16} />
         Create Your First Assignment

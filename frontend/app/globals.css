@@ -19,10 +19,15 @@
   --color-success: #4fc978;
   
   --color-border: #e4e4e7;
+  --color-surface-border: #e4e4e7;
   --color-ring: #ff6136;
+  --color-brand: #ff6136;
+  --color-output-shell: #2d2d2d;
+  --color-nav-dark: #171717;
   
   --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.02);
   --shadow-card: 0 1px 8px rgba(0, 0, 0, 0.02);
+  --shadow-banner: 0 4px 24px rgba(0, 0, 0, 0.08);
   --radius-shell: 24px;
   
   --font-sans: 'Geist', system-ui, sans-serif;
@@ -104,10 +109,55 @@ body {
       opacity: .5;
     }
   }
+
+  .figma-green-dot {
+    display: flex;
+    height: 24px;
+    width: 24px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    background-color: rgba(76, 175, 80, 0.15);
+  }
+  .figma-green-dot-inner {
+    height: 12px;
+    width: 12px;
+    border-radius: 9999px;
+    background-color: #4caf50;
+  }
+  .figma-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition-property: all;
+    transition-duration: 150ms;
+    height: 52px;
+    font-size: 15px;
+  }
+  .figma-output-shell {
+    background-color: var(--color-output-shell);
+    border-radius: 32px;
+    padding: 20px;
+  }
+  @media (min-width: 1024px) {
+    .figma-output-shell {
+      padding: 24px;
+    }
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

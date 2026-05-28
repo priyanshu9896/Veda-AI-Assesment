@@ -29,7 +29,7 @@ export function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center gap-1 rounded-2xl py-1.5 transition-colors active:bg-white/10"
+              className="relative flex flex-col items-center justify-center gap-1 rounded-2xl py-1.5 transition-colors active:bg-white/10"
             >
               <Icon
                 className={cn(
@@ -46,6 +46,9 @@ export function MobileBottomNav() {
               >
                 {item.label}
               </span>
+              {isActive && (
+                <span className="absolute -bottom-0.5 h-[3px] w-5 rounded-full bg-white" aria-hidden />
+              )}
             </Link>
           )
         })}

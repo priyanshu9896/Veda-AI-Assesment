@@ -1,7 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { ArrowLeft, Bell, ChevronDown, LayoutGrid } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { USER_NAME } from "@/constants"
 
 interface PageHeaderProps {
   title?: string
@@ -9,6 +11,8 @@ interface PageHeaderProps {
   icon?: React.ReactNode
   showBack?: boolean
   assignmentCount?: number
+  /** When set, the title + icon act as a link (e.g. Create New → /assignments/new) */
+  titleHref?: string
 }
 
 export function PageHeader({ 
@@ -16,7 +20,8 @@ export function PageHeader({
   subtitle,
   icon,
   showBack = true, 
-  assignmentCount 
+  assignmentCount,
+  titleHref,
 }: PageHeaderProps) {
   const router = useRouter()
   return (
@@ -31,20 +36,32 @@ export function PageHeader({
           </button>
         )}
         <div className="flex items-center gap-2">
-          {icon ? icon : <LayoutGrid className="h-[18px] w-[18px] text-[#858585] mb-[2px]" strokeWidth={2.5} />}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
+          {titleHref ? (
+            <Link
+              href={titleHref}
+              className="flex items-center gap-2 rounded-lg py-1 pr-2 -ml-1 transition-opacity hover:opacity-75"
+            >
+              {icon ? icon : <LayoutGrid className="h-[18px] w-[18px] text-[#858585] mb-[2px]" strokeWidth={2.5} />}
               <h1 className="text-[15px] font-bold text-[#1c1c1e]">{title}</h1>
-              {assignmentCount !== undefined && (
-                <span className="ml-1 flex h-5 items-center justify-center rounded-full bg-black/5 px-2 text-xs font-semibold text-foreground">
-                  {assignmentCount}
-                </span>
-              )}
-            </div>
-            {subtitle && (
-              <span className="text-[12px] font-medium text-[#858585]">{subtitle}</span>
-            )}
-          </div>
+            </Link>
+          ) : (
+            <>
+              {icon ? icon : <LayoutGrid className="h-[18px] w-[18px] text-[#858585] mb-[2px]" strokeWidth={2.5} />}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-[15px] font-bold text-[#1c1c1e]">{title}</h1>
+                  {assignmentCount !== undefined && (
+                    <span className="ml-1 flex h-5 items-center justify-center rounded-full bg-black/5 px-2 text-xs font-semibold text-foreground">
+                      {assignmentCount}
+                    </span>
+                  )}
+                </div>
+                {subtitle && (
+                  <span className="text-[12px] font-medium text-[#858585]">{subtitle}</span>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -57,12 +74,12 @@ export function PageHeader({
         <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
           <img 
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=John&backgroundColor=f0d2c3" 
-            alt="John Doe"
+            alt={USER_NAME}
             className="h-9 w-9 shrink-0 rounded-full bg-white object-cover shadow-sm"
           />
           <div className="flex items-center gap-1.5">
             <span className="text-[15px] font-semibold text-foreground">
-              John Doe
+              {USER_NAME}
             </span>
             <ChevronDown className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={2} />
           </div>

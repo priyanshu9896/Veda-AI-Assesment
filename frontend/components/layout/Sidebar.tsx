@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { BrandMark } from "./BrandMark"
 import { Button } from "../ui/Button"
 import { useAssignmentStore, useAuthStore } from "@/store"
+import { SCHOOL_NAME, SCHOOL_LOCATION } from "@/constants"
 import { LogOut } from "lucide-react"
 
 const NAV_ITEMS = [
@@ -29,7 +30,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { assignments } = useAssignmentStore()
-  const { logout, user } = useAuthStore()
+  const { logout } = useAuthStore()
 
   const handleLogout = () => {
     logout()
@@ -54,7 +55,10 @@ export function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || (pathname === '/' && item.href === '/assignments')
+          const isActive =
+            pathname === item.href ||
+            (item.href === '/assignments' && pathname.startsWith('/assignments')) ||
+            (pathname === '/' && item.href === '/')
           const Icon = item.icon
           return (
             <Link
@@ -92,16 +96,18 @@ export function Sidebar() {
 
         <button onClick={handleLogout} className="group relative flex w-full items-center gap-3 rounded-[20px] bg-[#f4f4f5] p-3.5 transition-colors hover:bg-[#ebebeb]">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-black/5 overflow-hidden">
-            <span className="text-[16px] font-bold text-ink uppercase">
-              {user?.role?.charAt(0) || 'U'}
-            </span>
+            <img
+              src="https://api.dicebear.com/7.x/shapes/svg?seed=school&backgroundColor=f4f4f5"
+              alt=""
+              className="h-full w-full object-cover"
+            />
           </div>
           <div className="flex flex-col items-start overflow-hidden text-left flex-1">
-            <span className="w-full truncate text-[14px] font-bold leading-tight text-ink capitalize">
-              {user?.role || 'User'} Access
+            <span className="w-full truncate text-[14px] font-bold leading-tight text-ink">
+              {SCHOOL_NAME}
             </span>
             <span className="w-full truncate text-[12.5px] font-medium text-[#858585] mt-0.5">
-              {user?.email || 'Logged in'}
+              {SCHOOL_LOCATION}
             </span>
           </div>
           <div className="absolute right-4 text-[#858585] opacity-0 transition-opacity group-hover:opacity-100">

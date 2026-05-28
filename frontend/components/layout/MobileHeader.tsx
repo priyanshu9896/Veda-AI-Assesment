@@ -2,6 +2,7 @@
 
 import { Bell, Menu } from "lucide-react"
 import { BrandMark } from "./BrandMark"
+import { USER_NAME } from "@/constants"
 
 export function MobileHeader() {
   return (
@@ -15,7 +16,7 @@ export function MobileHeader() {
         </button>
         <img
           src="https://api.dicebear.com/7.x/avataaars/svg?seed=John&backgroundColor=f0d2c3"
-          alt="John Doe"
+          alt={USER_NAME}
           className="h-10 w-10 shrink-0 rounded-full bg-white object-cover shadow-sm"
         />
         <button className="flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-black/5">
